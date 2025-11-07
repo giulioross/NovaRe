@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import AdminLogin from './AdminLogin.jsx';
 import AdminCreateListing from './AdminCreateListing.jsx';
+import AdminEditListing from './AdminEditListing.jsx';
 import Listings from './Listings.jsx';
+import listingService from '../services/listingService.js';
 
 /**
  * Pannello di amministrazione completo
@@ -9,15 +11,22 @@ import Listings from './Listings.jsx';
 const AdminPanel = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
-  const [activeTab, setActiveTab] = useState('view'); // 'view' o 'create'
+  const [activeTab, setActiveTab] = useState('view'); // 'view', 'create', 'edit'
   const [refreshListings, setRefreshListings] = useState(0);
+  const [editingListing, setEditingListing] = useState(null);
 
   const handleLogin = async (username, password) => {
     try {
+      console.log('🔐 DEBUG LOGIN - Credenziali inserite:');
+      console.log('  Username:', username);
+      console.log('  Password:', password);
+      
       // Qui potresti fare una chiamata di test per verificare le credenziali
       // Per ora assumiamo che il login sia sempre valido se username e password sono forniti
       if (username && password) {
-        setCredentials({ username, password });
+        const newCredentials = { username, password };
+        console.log('🔐 DEBUG LOGIN - Salvando credenziali:', newCredentials);
+        setCredentials(newCredentials);
         setIsAuthenticated(true);
       } else {
         throw new Error('Credenziali non valide');
@@ -39,6 +48,40 @@ const AdminPanel = () => {
     // Aggiorna la lista degli immobili
     setRefreshListings(prev => prev + 1);
     // Torna alla tab di visualizzazione
+    setActiveTab('view');
+  };
+
+  const handleEditListing = (listing) => {
+    console.log('Modifica immobile:', listing);
+    setEditingListing(listing);
+    setActiveTab('edit');
+  };
+
+  const handleListingUpdated = (updatedListing) => {
+    console.log('Immobile aggiornato:', updatedListing);
+    // Aggiorna la lista degli immobili
+    setRefreshListings(prev => prev + 1);
+    // Reset editing state
+    setEditingListing(null);
+    setActiveTab('view');
+  };
+
+  const handleDeleteListing = async (listing) => {
+    try {
+      console.log('Eliminazione immobile:', listing);
+      await listingService.deleteListing(listing.id, credentials.username, credentials.password);
+      console.log('✅ Immobile eliminato con successo');
+      // Aggiorna la lista degli immobili
+      setRefreshListings(prev => prev + 1);
+      alert('✅ Immobile eliminato con successo!');
+    } catch (error) {
+      console.error('❌ Errore nell\'eliminazione:', error);
+      alert(`❌ Errore nell'eliminazione: ${error.message}`);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingListing(null);
     setActiveTab('view');
   };
 
@@ -161,6 +204,27 @@ const AdminPanel = () => {
           >
             ➕ Crea Immobile
           </button>
+          
+          {editingListing && (
+            <button
+              onClick={() => setActiveTab('edit')}
+              style={{
+                background: activeTab === 'edit' ? '#ffc107' : 'transparent',
+                color: activeTab === 'edit' ? '#000' : '#ffc107',
+                border: '2px solid #ffc107',
+                padding: '12px 24px',
+                borderRadius: '25px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                transition: 'all 0.3s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              ✏️ Modifica: {editingListing.title?.slice(0, 20)}...
+            </button>
+          )}
         </div>
       </div>
 
@@ -194,7 +258,14 @@ const AdminPanel = () => {
                 🔄 Aggiorna Lista
               </button>
             </div>
-            <Listings key={refreshListings} />
+            <Listings 
+              key={refreshListings}
+              adminMode={true}
+              adminUsername={credentials.username}
+              adminPassword={credentials.password}
+              onEdit={handleEditListing}
+              onDelete={handleDeleteListing}
+            />
           </div>
         )}
 
@@ -203,6 +274,16 @@ const AdminPanel = () => {
             username={credentials.username}
             password={credentials.password}
             onSuccess={handleListingCreated}
+          />
+        )}
+
+        {activeTab === 'edit' && editingListing && (
+          <AdminEditListing
+            listing={editingListing}
+            username={credentials.username}
+            password={credentials.password}
+            onSuccess={handleListingUpdated}
+            onCancel={handleCancelEdit}
           />
         )}
       </div>

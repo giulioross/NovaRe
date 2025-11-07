@@ -11,12 +11,14 @@ import Partners from './components/Partners';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import DemoPage from './components/DemoPage';
+import ListingDetail from './components/ListingDetail';
 
 // Import dei servizi
 import { healthService } from './services/api';
 
 function App() {
   const [showDemo, setShowDemo] = useState(false);
+  const [selectedListingId, setSelectedListingId] = useState(null);
 
   // Test di connessione al backend al caricamento della pagina
   useEffect(() => {
@@ -45,8 +47,24 @@ function App() {
 
   // Se è richiesta la modalità demo
   if (showDemo) {
-    return <DemoPage />;
+    return <DemoPage onBackToHome={() => setShowDemo(false)} />;
   }
+
+  // Se è selezionato un annuncio, mostra i dettagli
+  if (selectedListingId) {
+    return (
+      <ListingDetail 
+        listingId={selectedListingId} 
+        onBack={() => setSelectedListingId(null)} 
+      />
+    );
+  }
+
+  // Handlers per la navigazione
+  const handleViewDetails = (listingId) => {
+    console.log('🔍 Navigazione ai dettagli dell\'annuncio:', listingId);
+    setSelectedListingId(listingId);
+  };
 
   return (
     <div className="App">
@@ -88,7 +106,7 @@ function App() {
       <Hero />
       <About />
       <Services />
-      <Properties />
+      <Properties onViewDetails={handleViewDetails} />
       <Partners />
       <Contact />
       <Footer />

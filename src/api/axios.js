@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Crea un'istanza axios configurata per Nova RE API
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -14,6 +14,10 @@ apiClient.interceptors.request.use(
   (config) => {
     if (import.meta.env.VITE_DEBUG_MODE === 'true') {
       console.log('🚀 API Request:', config.method?.toUpperCase(), config.url);
+      console.log('📋 Headers:', config.headers);
+      if (config.headers?.Authorization) {
+        console.log('🔐 Auth Header:', config.headers.Authorization.substring(0, 20) + '...');
+      }
     }
     return config;
   },
@@ -33,6 +37,10 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     console.error('❌ Response Error:', error.response?.status, error.config?.url);
+    if (error.response?.data) {
+      console.error('📄 Response Data:', error.response.data);
+    }
+    console.error('📋 Request Headers:', error.config?.headers);
     return Promise.reject(error);
   }
 );

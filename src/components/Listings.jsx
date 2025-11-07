@@ -1,12 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useListings } from '../hooks/useListings.js';
 import LoadingSpinner from './LoadingSpinner.jsx';
+import PlaceholderImage from './PlaceholderImage.jsx';
 
 /**
  * Componente per visualizzare la lista degli immobili pubblici
+ * @param {boolean} adminMode - Se true, mostra controlli admin
+ * @param {string} adminUsername - Username admin per operazioni
+ * @param {string} adminPassword - Password admin per operazioni  
+ * @param {Function} onEdit - Callback per modificare un immobile
+ * @param {Function} onDelete - Callback per eliminare un immobile
  */
-const Listings = () => {
-  const { listings, loading, error } = useListings();
+const Listings = ({ adminMode = false, adminUsername, adminPassword, onEdit, onDelete }) => {
+  const { listings, loading, error, refetch } = useListings();
 
   // Componente per messaggio di caricamento
   if (loading) {
@@ -92,7 +98,10 @@ const Listings = () => {
   };
 
   // Componente per singolo immobile
-  const ListingCard = ({ listing }) => (
+  const ListingCard = ({ listing }) => {
+    const [imageError, setImageError] = useState(false);
+    
+    return (
     <div style={{
       background: 'white',
       borderRadius: '15px',
@@ -112,18 +121,24 @@ const Listings = () => {
     >
       {/* Immagine dell'immobile */}
       <div style={{ position: 'relative', height: '200px', overflow: 'hidden' }}>
-        <img 
-          src={listing.imageUrl || 'https://via.placeholder.com/400x200?text=Immobile'}
-          alt={listing.title || 'Immobile'}
-          style={{ 
-            width: '100%', 
-            height: '100%', 
-            objectFit: 'cover' 
-          }}
-          onError={(e) => {
-            e.target.src = 'https://via.placeholder.com/400x200?text=Immagine+non+disponibile';
-          }}
-        />
+        {listing.imageUrl && !imageError ? (
+          <img 
+            src={listing.imageUrl}
+            alt={listing.title || 'Immobile'}
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              objectFit: 'cover' 
+            }}
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <PlaceholderImage 
+            width="100%" 
+            height="200px" 
+            text="Immagine non disponibile"
+          />
+        )}
         {listing.type && (
           <div style={{
             position: 'absolute',
@@ -209,7 +224,9 @@ const Listings = () => {
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
-          marginTop: '20px'
+          marginTop: '20px',
+          flexWrap: 'wrap',
+          gap: '10px'
         }}>
           <div style={{ 
             fontSize: '1.3rem', 
@@ -218,35 +235,94 @@ const Listings = () => {
           }}>
             {formatPrice(listing.price)}
           </div>
-          <button 
-            onClick={() => {
-              // Qui potresti aprire un modal o navigare alla pagina di dettaglio
-              console.log('Visualizza dettagli immobile:', listing.id);
-            }}
-            style={{
-              background: 'linear-gradient(45deg, #007bff, #0056b3)',
-              color: 'white',
-              padding: '8px 16px',
-              border: 'none',
-              borderRadius: '20px',
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.3s'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'scale(1)';
-            }}
-          >
-            Dettagli
-          </button>
+          
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {/* Pulsanti admin */}
+            {adminMode && (
+              <>
+                <button 
+                  onClick={() => onEdit && onEdit(listing)}
+                  style={{
+                    background: '#28a745',
+                    color: 'white',
+                    padding: '6px 12px',
+                    border: 'none',
+                    borderRadius: '15px',
+                    fontSize: '0.8rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#218838';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#28a745';
+                  }}
+                >
+                  ✏️ Modifica
+                </button>
+                
+                <button 
+                  onClick={() => {
+                    if (window.confirm(`Sei sicuro di voler eliminare l'immobile "${listing.title}"?`)) {
+                      onDelete && onDelete(listing);
+                    }
+                  }}
+                  style={{
+                    background: '#dc3545',
+                    color: 'white',
+                    padding: '6px 12px',
+                    border: 'none',
+                    borderRadius: '15px',
+                    fontSize: '0.8rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#c82333';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#dc3545';
+                  }}
+                >
+                  🗑️ Elimina
+                </button>
+              </>
+            )}
+            
+            <button 
+              onClick={() => {
+                // Qui potresti aprire un modal o navigare alla pagina di dettaglio
+                console.log('Visualizza dettagli immobile:', listing.id);
+              }}
+              style={{
+                background: 'linear-gradient(45deg, #007bff, #0056b3)',
+                color: 'white',
+                padding: '8px 16px',
+                border: 'none',
+                borderRadius: '20px',
+                fontSize: '0.9rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'scale(1.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'scale(1)';
+              }}
+            >
+              Dettagli
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   // Render della lista
   return (

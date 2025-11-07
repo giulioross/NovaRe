@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = 'http://localhost:8081/api';
 
 // Servizio per gestire le chiamate API relative agli immobili
 export const propertyService = {
@@ -105,7 +105,7 @@ export const utils = {
 
   // Normalizza URL immagini
   normalizeImageUrl(url) {
-    if (!url) return 'https://via.placeholder.com/400x250?text=Immagine+non+disponibile';
+    if (!url) return null; // Ritorna null invece di placeholder esterno
     
     // Se l'URL è già completo, ritornalo così com'è
     if (url.startsWith('http://') || url.startsWith('https://')) {

@@ -25,7 +25,33 @@ const DemoPage = () => {
           🏠 Nova RE - Demo API Integration
         </h1>
         
-        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => window.location.href = '/'}
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              border: '2px solid rgba(255,255,255,0.3)',
+              padding: '12px 24px',
+              borderRadius: '25px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              transition: 'all 0.3s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = 'rgba(255,255,255,0.9)';
+              e.target.style.color = '#007bff';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'rgba(255,255,255,0.2)';
+              e.target.style.color = 'white';
+            }}
+          >
+            🏠 Torna alla Home
+          </button>
           <button
             onClick={() => setCurrentView('public')}
             style={{
@@ -141,7 +167,7 @@ const DemoPage = () => {
         </div>
         
         <div style={{ marginTop: '20px', color: '#666' }}>
-          <p>Backend atteso su: <code>http://localhost:8080</code></p>
+          <p>Backend atteso su: <code>http://localhost:8081</code></p>
           <p>Frontend in esecuzione su: <code>http://localhost:5174</code></p>
         </div>
       </div>

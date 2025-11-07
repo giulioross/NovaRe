@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { listingService } from '../services/listingService.js';
+import ImageUploader from './ImageUploader.jsx';
+import { mapListingToBackend } from '../utils/listingMapper.js';
 
 /**
  * Componente per creare un nuovo immobile (solo per admin)
@@ -17,7 +19,7 @@ const AdminCreateListing = ({ username, password, onSuccess }) => {
     price: '',
     type: 'VENDITA', // VENDITA o AFFITTO
     size: '',
-    imageUrl: ''
+    images: [] // Array di immagini invece di imageUrl singola
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,6 +31,14 @@ const AdminCreateListing = ({ username, password, onSuccess }) => {
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  // Gestione del cambio immagini
+  const handleImagesChange = (newImages) => {
+    setFormData(prev => ({
+      ...prev,
+      images: newImages
     }));
   };
 
@@ -64,17 +74,14 @@ const AdminCreateListing = ({ username, password, onSuccess }) => {
     setMessage({ type: '', text: '' });
 
     try {
-      // Prepara i dati per l'invio (allineati al ListingDTO del backend)
-      const listingData = {
-        title: formData.title.trim(),
-        description: formData.description.trim() || null,
-        address: formData.address.trim(),
-        bedrooms: formData.bedrooms ? Math.max(0, parseInt(formData.bedrooms)) : 0,
-        bathrooms: formData.bathrooms ? Math.max(0, parseInt(formData.bathrooms)) : 0,
-        price: parseFloat(formData.price), // Obbligatorio come numero
-        published: true // Immobile pubblicato di default
-        // Nota: rimuoviamo 'type', 'size', 'imageUrl' se non gestiti dal DTO backend
-      };
+      console.log('🔐 DEBUG - Credenziali ricevute:');
+      console.log('  Username:', username);
+      console.log('  Password:', password);
+      console.log('  Username tipo:', typeof username);
+      console.log('  Password tipo:', typeof password);
+      
+      // Prepara i dati per l'invio usando il mapper
+      const listingData = mapListingToBackend(formData);
 
       // Chiama il servizio per creare l'immobile
       const createdListing = await listingService.createListing(
@@ -99,7 +106,7 @@ const AdminCreateListing = ({ username, password, onSuccess }) => {
         price: '',
         type: 'VENDITA',
         size: '',
-        imageUrl: ''
+        images: []
       });
 
       // Chiama il callback di successo se fornito
@@ -328,24 +335,14 @@ const AdminCreateListing = ({ username, password, onSuccess }) => {
           </div>
         </div>
 
-        {/* URL Immagine */}
+        {/* Upload Immagini */}
         <div style={{ marginBottom: '20px' }}>
           <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-            URL Immagine
+            Immagini Annuncio
           </label>
-          <input
-            type="url"
-            name="imageUrl"
-            value={formData.imageUrl}
-            onChange={handleInputChange}
-            placeholder="https://esempio.com/immagine.jpg"
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: '2px solid #e1e5e9',
-              borderRadius: '10px',
-              fontSize: '14px'
-            }}
+          <ImageUploader
+            images={formData.images}
+            onImagesChange={handleImagesChange}
           />
         </div>
 

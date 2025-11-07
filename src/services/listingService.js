@@ -2,7 +2,14 @@ import apiClient from '../api/axios.js';
 
 // Helper per creare header Basic Auth
 const basicAuthHeader = (username, password) => {
+  console.log('🔐 DEBUG BASIC AUTH - Input:');
+  console.log('  Username:', username);
+  console.log('  Password:', password);
+  
   const credentials = btoa(`${username}:${password}`);
+  console.log('🔐 DEBUG BASIC AUTH - String da codificare:', `${username}:${password}`);
+  console.log('🔐 DEBUG BASIC AUTH - Base64 risultato:', credentials);
+  
   return {
     'Authorization': `Basic ${credentials}`
   };

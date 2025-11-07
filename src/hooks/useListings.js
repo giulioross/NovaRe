@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { listingService } from '../services/listingService.js';
+import { mapListingFromBackend, mapListingsFromBackend } from '../utils/listingMapper.js';
 
 /**
  * Hook personalizzato per caricare gli immobili pubblici
@@ -23,7 +24,8 @@ export const useListings = () => {
       
       if (data && Array.isArray(data)) {
         console.log(`✅ Caricati ${data.length} immobili pubblici`);
-        setListings(data);
+        const mappedListings = mapListingsFromBackend(data);
+        setListings(mappedListings);
       } else {
         console.warn('⚠️ Dati immobili non validi:', data);
         setListings([]);
@@ -82,7 +84,8 @@ export const useListing = (id) => {
       const data = await listingService.getPublicListing(id);
       
       console.log(`✅ Caricato immobile ${id}`);
-      setListing(data);
+      const mappedListing = mapListingFromBackend(data);
+      setListing(mappedListing);
       
     } catch (err) {
       console.error(`❌ Errore nel caricamento dell'immobile ${id}:`, err);
