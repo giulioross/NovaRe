@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from './LoadingSpinner';
-import listingService from '../services/listingService';
+import listingService, { makeAuthHeader } from '../services/listingService';
 import ImageUploader from './ImageUploader.jsx';
-import { mapListingToBackend } from '../utils/listingMapper.js';
+import { convertImagesToFiles, prepareListing } from '../utils/fileUtils.js';
 
 /**
  * Componente per modificare un immobile esistente (solo per admin)
@@ -17,6 +17,7 @@ const AdminEditListing = ({ listing, username, password, onSuccess, onCancel }) 
     title: '',
     description: '',
     address: '',
+    city: '',
     bedrooms: '',
     bathrooms: '',
     price: '',
@@ -37,13 +38,39 @@ const AdminEditListing = ({ listing, username, password, onSuccess, onCancel }) 
         title: listing.title || '',
         description: listing.description || '',
         address: listing.address || '',
+        city: listing.city || '',
         bedrooms: listing.bedrooms?.toString() || '',
         bathrooms: listing.bathrooms?.toString() || '',
         price: listing.price?.toString() || '',
-        type: listing.type || 'VENDITA',
+        type: listing.type || listing.contractType || 'VENDITA',
         published: listing.published ?? true,
         size: listing.size?.toString() || '',
-        images: listing.images || (listing.imageUrl ? [{ base64: listing.imageUrl, name: 'Immagine esistente', position: 1 }] : [])
+        images: (() => {
+          // Debug: logga la struttura delle immagini dal backend
+          console.log('🔄 DEBUG Edit - Immagini dal backend:', {
+            images: listing.images,
+            imageUrl: listing.imageUrl,
+            photoUrls: listing.photoUrls,
+            photos: listing.photos
+          });
+          
+          // Gestisci diversi formati di immagine dal backend
+          let imageUrls = [];
+          
+          if (listing.images && Array.isArray(listing.images)) {
+            imageUrls = listing.images;
+          } else if (listing.photoUrls && Array.isArray(listing.photoUrls)) {
+            imageUrls = listing.photoUrls;
+          } else if (listing.photos && Array.isArray(listing.photos)) {
+            imageUrls = listing.photos;
+          } else if (listing.imageUrl) {
+            imageUrls = [listing.imageUrl];
+          }
+          
+          // Converte le URL in formato che ImageUploader può gestire
+          // ImageUploader si aspetta base64 o URL diretti come stringhe
+          return imageUrls.filter(url => url && typeof url === 'string');
+        })()
       });
     }
   }, [listing]);
@@ -96,31 +123,84 @@ const AdminEditListing = ({ listing, username, password, onSuccess, onCancel }) 
     setMessage({ type: '', text: '' });
 
     try {
-      console.log('🔐 DEBUG EDIT - Credenziali ricevute:');
+      console.log('🔐 DEBUG NEW FLOW - Credenziali ricevute:');
       console.log('  Username:', username);
       console.log('  Password:', password);
-      console.log('📝 DEBUG EDIT - Dati da aggiornare:', formData);
+      console.log('📝 DEBUG NEW FLOW - Dati da aggiornare:', formData);
       
-      // Prepara i dati per l'invio usando il mapper
-      const listingData = mapListingToBackend(formData);
+      // costruisci DTO dai campi del form
+      const dto = {
+        id: listing.id,
+        title: formData.title,
+        address: formData.address,
+        price: Number(formData.price),
+        description: formData.description,
+        bedrooms: Number(formData.bedrooms || 0),
+        bathrooms: Number(formData.bathrooms || 0),
+        size: Number(formData.size || 0),
+        contractType: formData.contractType || 'VENDITA',
+        published: formData.published !== false,
+      };
+      const files = convertImagesToFiles(formData.images);
+      const authHeader = makeAuthHeader(username, password);
+      
+      console.log('🔄 DEBUG NEW FLOW - Dati listing per backend:', dto);
+      console.log('📸 DEBUG NEW FLOW - File convertiti:', files.length, files);
+      console.log('🔐 DEBUG NEW FLOW - Auth header:', authHeader);
 
-      // Chiama il servizio per aggiornare l'immobile
-      const updatedListing = await listingService.updateListing(
-        listing.id,
-        listingData, 
-        username, 
-        password
-      );
+      // chiamata combinata: update JSON -> upload photos (se presenti)
+      console.log('� SAFE FLOW - Aggiornamento immobile:', { id: listing.id, dto });
+      console.log('📸 SAFE FLOW - File da caricare:', files?.length || 0);
+      
+      const result = await listingService.updateListingWithPhotos(listing.id, dto, files, authHeader);
+      console.log('✅ SAFE FLOW - Aggiornamento completato:', result);
+
+      // success: aggiorna UI con result (listing aggiornato)
+      let finalListing = updatedListing;
+      if (files.length > 0) {
+        console.log('� Step 2: Upload foto...');
+        console.log('📸 DEBUG NEW FLOW - File da caricare:', files);
+        console.log('📸 DEBUG NEW FLOW - ID annuncio:', listing.id);
+        
+        try {
+          const listingWithPhotos = await listingService.uploadPhotos(
+            listing.id,
+            files,
+            authHeader
+          );
+          
+          console.log('📸 DEBUG NEW FLOW - Response upload foto:', listingWithPhotos);
+          
+          if (listingWithPhotos) {
+            finalListing = listingWithPhotos;
+            console.log('✅ Step 2 completato - Listing finale con foto:', finalListing);
+          } else {
+            console.warn('⚠️ DEBUG NEW FLOW - Upload foto non ha restituito dati');
+          }
+        } catch (photoError) {
+          console.error('❌ DEBUG NEW FLOW - Errore upload foto:', photoError);
+          console.error('📋 DEBUG NEW FLOW - Photo error status:', photoError.response?.status);
+          console.error('📋 DEBUG NEW FLOW - Photo error data:', photoError.response?.data);
+          // Non bloccare il processo, ma informa l'utente
+          setMessage({
+            type: 'warning',
+            text: `⚠️ Modifiche salvate, ma errore nel caricamento foto: ${photoError.response?.data || photoError.message}`
+          });
+        }
+      } else {
+        console.log('📸 Step 2: Nessuna foto da caricare');
+      }
 
       // Successo
       setMessage({
         type: 'success',
-        text: '✅ Immobile aggiornato con successo!'
+        text: `✅ Immobile modificato con successo! ${files?.length > 0 ? `(${files.length} foto caricate)` : ''}`
       });
 
-      // Chiama il callback di successo
+      // Chiama il callback di successo se fornito
       if (onSuccess) {
-        onSuccess(updatedListing);
+        console.log('🔄 SAFE FLOW - Chiamando onSuccess con result:', result);
+        onSuccess(result);
       }
 
       // Dopo 2 secondi, chiudi il form
@@ -129,7 +209,10 @@ const AdminEditListing = ({ listing, username, password, onSuccess, onCancel }) 
       }, 2000);
 
     } catch (error) {
-      console.error('Errore nell\'aggiornamento dell\'immobile:', error);
+      console.error('❌ Errore nell\'aggiornamento dell\'immobile (NEW FLOW):', error);
+      console.error('Response data:', error.response?.data);
+      console.error('Response status:', error.response?.status);
+      console.error('Response headers:', error.response?.headers);
       
       // Gestione errori di validazione (400)
       if (error.response?.status === 400 && error.response?.data) {
@@ -253,6 +336,31 @@ const AdminEditListing = ({ listing, username, password, onSuccess, onCancel }) 
             {getFieldError('address') && (
               <div style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '5px' }}>
                 {getFieldError('address')}
+              </div>
+            )}
+          </div>
+
+          {/* Città */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              fontWeight: '600', 
+              color: '#333' 
+            }}>
+              Città
+            </label>
+            <input
+              type="text"
+              name="city"
+              value={formData.city}
+              onChange={handleInputChange}
+              style={getFieldStyle('city')}
+              placeholder="es. Milano"
+            />
+            {getFieldError('city') && (
+              <div style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '5px' }}>
+                {getFieldError('city')}
               </div>
             )}
           </div>

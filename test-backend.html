@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Backend NovaRE</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+        .error { background: #ffe6e6; }
+        .success { background: #e6ffe6; }
+        button { padding: 10px 15px; margin: 5px; }
+        input[type="text"], input[type="password"] { width: 200px; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Test Backend NovaRE</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Connessione API</h2>
+        <button onclick="testConnection()">Test Connessione</button>
+        <div id="connection-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Test Lista Immobili Pubblici</h2>
+        <button onclick="testPublicListings()">Carica Lista Immobili</button>
+        <div id="listings-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Test Admin Login</h2>
+        <input type="text" id="username" placeholder="Username" value="admin">
+        <input type="password" id="password" placeholder="Password" value="password">
+        <button onclick="testAdminLogin()">Test Login</button>
+        <div id="login-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Test Immobile Specifico</h2>
+        <input type="text" id="listing-id" placeholder="ID Immobile">
+        <button onclick="testSpecificListing()">Carica Immobile</button>
+        <div id="specific-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        async function testConnection() {
+            const result = document.getElementById('connection-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                if (response.ok) {
+                    result.innerHTML = `<div class="success">✅ Connessione OK: ${response.status}</div>`;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Errore connessione: ${response.status}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Errore: ${error.message}</div>`;
+            }
+        }
+
+        async function testPublicListings() {
+            const result = document.getElementById('listings-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/public/listings`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    console.log('📋 Lista immobili completa:', data);
+                    result.innerHTML = `
+                        <div class="success">✅ ${data.length} immobili caricati</div>
+                        <details>
+                            <summary>Dettagli Immagini</summary>
+                            <pre>${data.map(listing => ({
+                                id: listing.id,
+                                title: listing.title || listing.titolo,
+                                imageUrl: listing.imageUrl,
+                                immaginePrincipale: listing.immaginePrincipale,
+                                images: listing.images,
+                                immagini: listing.immagini,
+                                photoUrls: listing.photoUrls,
+                                photos: listing.photos
+                            })).map(l => JSON.stringify(l, null, 2)).join('\\n---\\n')}</pre>
+                        </details>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Errore: ${response.status} - ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Errore: ${error.message}</div>`;
+            }
+        }
+
+        async function testAdminLogin() {
+            const result = document.getElementById('login-result');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/listings`, {
+                    headers: {
+                        'Authorization': 'Basic ' + btoa(username + ':' + password)
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    result.innerHTML = `<div class="success">✅ Login OK - ${data.length} immobili admin</div>`;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Login fallito: ${response.status}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Errore: ${error.message}</div>`;
+            }
+        }
+
+        async function testSpecificListing() {
+            const result = document.getElementById('specific-result');
+            const listingId = document.getElementById('listing-id').value;
+            
+            if (!listingId) {
+                result.innerHTML = '<div class="error">❌ Inserisci un ID immobile</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/public/listings/${listingId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    console.log(`🏠 Immobile ${listingId} completo:`, data);
+                    result.innerHTML = `
+                        <div class="success">✅ Immobile caricato: ${data.title || data.titolo}</div>
+                        <details>
+                            <summary>Dettagli Completi</summary>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </details>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Errore: ${response.status} - ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Errore: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-test connessione all'avvio
+        document.addEventListener('DOMContentLoaded', testConnection);
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { listingService } from '../services/listingService.js';
 import ImageUploader from './ImageUploader.jsx';
-import { mapListingToBackend } from '../utils/listingMapper.js';
+import { convertImagesToFiles, prepareListing } from '../utils/fileUtils.js';
 
 /**
  * Componente per creare un nuovo immobile (solo per admin)
@@ -14,6 +14,7 @@ const AdminCreateListing = ({ username, password, onSuccess }) => {
     title: '',
     description: '',
     address: '',
+    city: '',
     bedrooms: '',
     bathrooms: '',
     price: '',
@@ -80,14 +81,17 @@ const AdminCreateListing = ({ username, password, onSuccess }) => {
       console.log('  Username tipo:', typeof username);
       console.log('  Password tipo:', typeof password);
       
-      // Prepara i dati per l'invio usando il mapper
-      const listingData = mapListingToBackend(formData);
+      // Prepara i dati per l'invio multipart
+      const listingData = prepareListing(formData);
+      const files = convertImagesToFiles(formData.images);
+      
+      console.log('🔄 DEBUG - Dati listing per backend:', listingData);
+      console.log('📸 DEBUG - File convertiti:', files.length, files);
 
-      // Chiama il servizio per creare l'immobile
+      // Chiama il servizio per creare l'immobile con supporto multipart
       const createdListing = await listingService.createListing(
-        listingData, 
-        username, 
-        password
+        listingData,
+        files
       );
 
       // Successo
@@ -106,7 +110,8 @@ const AdminCreateListing = ({ username, password, onSuccess }) => {
         price: '',
         type: 'VENDITA',
         size: '',
-        images: []
+        images: [],
+        city: ''
       });
 
       // Chiama il callback di successo se fornito
@@ -116,6 +121,9 @@ const AdminCreateListing = ({ username, password, onSuccess }) => {
 
     } catch (error) {
       console.error('Errore nella creazione dell\'immobile:', error);
+      console.error('Response data:', error.response?.data);
+      console.error('Response status:', error.response?.status);
+      console.error('Response headers:', error.response?.headers);
       
       // Gestione errori di validazione (400)
       if (error.response && error.response.status === 400) {
@@ -240,6 +248,26 @@ const AdminCreateListing = ({ username, password, onSuccess }) => {
           {getFieldError('address') && (
             <div style={{ color: '#dc3545', fontSize: '0.8rem', marginTop: '5px' }}>
               {getFieldError('address')}
+            </div>
+          )}
+        </div>
+
+        {/* Città */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+            Città
+          </label>
+          <input
+            type="text"
+            name="city"
+            value={formData.city}
+            onChange={handleInputChange}
+            placeholder="es. Milano"
+            style={getFieldStyle('city')}
+          />
+          {getFieldError('city') && (
+            <div style={{ color: '#dc3545', fontSize: '0.8rem', marginTop: '5px' }}>
+              {getFieldError('city')}
             </div>
           )}
         </div>

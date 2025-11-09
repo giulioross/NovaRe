@@ -15,35 +15,65 @@ export const useListings = () => {
    * Funzione per caricare gli immobili
    */
   const loadListings = async () => {
+    console.log('🔄 useListings - Inizio caricamento immobili pubblici...');
     setLoading(true);
     setError(null);
     
     try {
-      console.log('🔄 Caricamento immobili pubblici...');
       const data = await listingService.getPublicListings();
+      console.log('📥 useListings - Dati ricevuti dal backend:', data);
       
       if (data && Array.isArray(data)) {
-        console.log(`✅ Caricati ${data.length} immobili pubblici`);
+        console.log(`✅ useListings - Caricati ${data.length} immobili pubblici`);
+        
+        // Log dettagliato delle immagini per ogni immobile
+        data.forEach((listing, index) => {
+          console.log(`🏠 useListings - Immobile ${index + 1} (ID: ${listing.id}):`, {
+            title: listing.title,
+            imageUrl: listing.imageUrl,
+            photoUrls: listing.photoUrls,
+            photos: listing.photos,
+            images: listing.images,
+            hasImages: !!(listing.imageUrl || listing.photoUrls || listing.photos || listing.images)
+          });
+        });
+        
         const mappedListings = mapListingsFromBackend(data);
+        console.log('🔄 useListings - Immobili mappati:', mappedListings);
         setListings(mappedListings);
       } else {
-        console.warn('⚠️ Dati immobili non validi:', data);
+        console.warn('⚠️ useListings - Dati immobili non validi:', data);
         setListings([]);
       }
       
     } catch (err) {
-      console.error('❌ Errore nel caricamento degli immobili:', err);
+      console.error('❌ useListings - Errore nel caricamento degli immobili:', err);
       setError(err.message || 'Errore nel caricamento degli immobili');
       setListings([]);
     } finally {
       setLoading(false);
+      console.log('🏁 useListings - Caricamento completato');
     }
   };
 
-  // Carica gli immobili all'avvio del componente
+  // Carica gli immobili all'avvio del componente (solo una volta)
   useEffect(() => {
-    loadListings();
-  }, []);
+    console.log('🚀 useListings - Hook montato, inizio caricamento dati');
+    let mounted = true;
+    
+    const loadData = async () => {
+      if (mounted) {
+        await loadListings();
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      console.log('🔥 useListings - Hook smontato');
+      mounted = false;
+    };
+  }, []); // Array vuoto per eseguire solo al mount
 
   /**
    * Funzione per ricaricare gli immobili manualmente

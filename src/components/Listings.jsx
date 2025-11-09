@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useListings } from '../hooks/useListings.js';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import PlaceholderImage from './PlaceholderImage.jsx';
+import { API_BASE } from '../services/listingService.js';
 
 /**
  * Componente per visualizzare la lista degli immobili pubblici
@@ -13,6 +14,13 @@ import PlaceholderImage from './PlaceholderImage.jsx';
  */
 const Listings = ({ adminMode = false, adminUsername, adminPassword, onEdit, onDelete }) => {
   const { listings, loading, error, refetch } = useListings();
+
+  // Helper per costruire URL assolute delle immagini
+  const imgUrlFrom = (photo) => {
+    if (!photo) return '';
+    return (photo.startsWith('http://') || photo.startsWith('https://')) ? 
+      photo : `${API_BASE}${photo}`;
+  };
 
   // Componente per messaggio di caricamento
   if (loading) {
@@ -101,6 +109,15 @@ const Listings = ({ adminMode = false, adminUsername, adminPassword, onEdit, onD
   const ListingCard = ({ listing }) => {
     const [imageError, setImageError] = useState(false);
     
+    // Debug: logga la struttura dell'oggetto listing
+    console.log('📋 DEBUG Listing data:', listing);
+    console.log('🖼️ DEBUG Image fields:', {
+      imageUrl: listing.imageUrl,
+      photoUrls: listing.photoUrls,
+      photos: listing.photos,
+      images: listing.images
+    });
+    
     return (
     <div style={{
       background: 'white',
@@ -121,24 +138,48 @@ const Listings = ({ adminMode = false, adminUsername, adminPassword, onEdit, onD
     >
       {/* Immagine dell'immobile */}
       <div style={{ position: 'relative', height: '200px', overflow: 'hidden' }}>
-        {listing.imageUrl && !imageError ? (
-          <img 
-            src={listing.imageUrl}
-            alt={listing.title || 'Immobile'}
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover' 
-            }}
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <PlaceholderImage 
-            width="100%" 
-            height="200px" 
-            text="Immagine non disponibile"
-          />
-        )}
+        {/* Cerca il primo URL dell'immagine nei vari possibili campi */}
+        {(() => {
+          const rawImageUrl = listing.imageUrl || 
+                             (listing.photoUrls && listing.photoUrls[0]) ||
+                             (listing.photos && listing.photos[0]) ||
+                             (listing.images && listing.images[0]);
+          const imageUrl = imgUrlFrom(rawImageUrl);
+          
+          console.log('🖼️ LISTINGS Image URL conversion:', {
+            listingId: listing.id,
+            raw: rawImageUrl,
+            converted: imageUrl,
+            hasImage: !!imageUrl
+          });
+          
+          return (imageUrl && !imageError) ? (
+            <img 
+              src={imageUrl}
+              alt={listing.title || 'Immobile'}
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'cover' 
+              }}
+              onError={(e) => {
+                console.error('❌ LISTINGS Image load error:', {
+                  listingId: listing.id,
+                  src: e.target.src,
+                  originalUrl: rawImageUrl,
+                  convertedUrl: imageUrl
+                });
+                setImageError(true);
+              }}
+            />
+          ) : (
+            <PlaceholderImage 
+              width="100%" 
+              height="200px" 
+              text="Immagine non disponibile"
+            />
+          );
+        })()}
         {listing.type && (
           <div style={{
             position: 'absolute',

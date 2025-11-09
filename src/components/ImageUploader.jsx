@@ -124,6 +124,7 @@ const ImageUploader = ({ images = [], onImagesChange, maxImages = null }) => {
         />
         
         <button
+          type="button"
           onClick={() => fileInputRef.current?.click()}
           style={{
             background: 'linear-gradient(45deg, #28a745, #20c997)',

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AdminLogin from './AdminLogin.jsx';
 import AdminCreateListing from './AdminCreateListing.jsx';
 import AdminEditListing from './AdminEditListing.jsx';
+import AdminRegistration from './AdminRegistration.jsx';
 import Listings from './Listings.jsx';
 import listingService from '../services/listingService.js';
 
@@ -14,6 +15,7 @@ const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('view'); // 'view', 'create', 'edit'
   const [refreshListings, setRefreshListings] = useState(0);
   const [editingListing, setEditingListing] = useState(null);
+  const [showRegistration, setShowRegistration] = useState(false);
 
   const handleLogin = async (username, password) => {
     try {
@@ -58,12 +60,28 @@ const AdminPanel = () => {
   };
 
   const handleListingUpdated = (updatedListing) => {
-    console.log('Immobile aggiornato:', updatedListing);
+    console.log('🔄 DEBUG - Immobile aggiornato ricevuto:', updatedListing);
+    console.log('🖼️ DEBUG - Immagini nel listing aggiornato:', {
+      imageUrl: updatedListing?.imageUrl,
+      photoUrls: updatedListing?.photoUrls,
+      photos: updatedListing?.photos,
+      images: updatedListing?.images
+    });
+    
     // Aggiorna la lista degli immobili
-    setRefreshListings(prev => prev + 1);
+    console.log('🔄 DEBUG - Triggering refresh lista...');
+    setRefreshListings(prev => {
+      const newValue = prev + 1;
+      console.log('🔄 DEBUG - RefreshListings:', prev, '->', newValue);
+      return newValue;
+    });
+    
     // Reset editing state
     setEditingListing(null);
-    setActiveTab('view');
+    // Torna alla vista lista con un piccolo delay per far vedere il messaggio di successo
+    setTimeout(() => {
+      setActiveTab('view');
+    }, 1500);
   };
 
   const handleDeleteListing = async (listing) => {
@@ -85,8 +103,31 @@ const AdminPanel = () => {
     setActiveTab('view');
   };
 
-  // Se non autenticato, mostra il form di login
+  // Se non autenticato, mostra login o registrazione
   if (!isAuthenticated) {
+    if (showRegistration) {
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <AdminRegistration 
+            onRegistrationSuccess={(credentials) => {
+              console.log('✅ Admin registrato:', credentials.username);
+              setShowRegistration(false);
+              // Auto-login dopo registrazione
+              handleLogin(credentials.username, credentials.password);
+            }}
+            onCancel={() => setShowRegistration(false)}
+          />
+        </div>
+      );
+    }
+
     return (
       <div style={{
         minHeight: '100vh',
@@ -96,7 +137,37 @@ const AdminPanel = () => {
         justifyContent: 'center',
         padding: '20px'
       }}>
-        <AdminLogin onLogin={handleLogin} />
+        <div>
+          <AdminLogin onLogin={handleLogin} />
+          
+          {/* Link per passare alla registrazione */}
+          <div style={{
+            textAlign: 'center',
+            marginTop: '20px'
+          }}>
+            <button
+              onClick={() => setShowRegistration(true)}
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                color: 'white',
+                border: '1px solid rgba(255,255,255,0.3)',
+                padding: '10px 20px',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                transition: 'all 0.3s'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'rgba(255,255,255,0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'rgba(255,255,255,0.1)';
+              }}
+            >
+              👤 Non hai un account? Registrati qui
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

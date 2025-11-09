@@ -2,10 +2,18 @@ import React, { useState, useEffect } from 'react';
 import LoadingSpinner from './LoadingSpinner';
 import { useListings } from '../hooks/useListings';
 import PlaceholderImage from './PlaceholderImage';
+import { API_BASE } from '../services/listingService.js';
 
 const Properties = ({ onViewDetails }) => {
   const { listings: properties, loading, error, refetch } = useListings();
   const [filter, setFilter] = useState('all');
+
+  // Helper per costruire URL assolute delle immagini
+  const imgUrlFrom = (photo) => {
+    if (!photo) return '';
+    return (photo.startsWith('http://') || photo.startsWith('https://')) ? 
+      photo : `${API_BASE}${photo}`;
+  };
 
   // Funzione per filtrare gli immobili
   const filterProperties = (type) => {
@@ -46,7 +54,30 @@ const Properties = ({ onViewDetails }) => {
       `€${property.price?.toLocaleString('it-IT')}/mese`;
     
     const typeLabel = property.contractType === 'VENDITA' ? 'Vendita' : 'Affitto';
-    const imageUrl = property.imageUrl;
+    
+    // Debug: logga la struttura dell'oggetto property
+    console.log('🏠 DEBUG Property data:', property);
+    console.log('🖼️ DEBUG Image fields:', {
+      imageUrl: property.imageUrl,
+      photoUrls: property.photoUrls,
+      photos: property.photos,
+      images: property.images
+    });
+    
+    // Cerca il primo URL dell'immagine nei vari possibili campi
+    const rawImageUrl = property.imageUrl || 
+                       (property.photoUrls && property.photoUrls[0]) ||
+                       (property.photos && property.photos[0]) ||
+                       (property.images && property.images[0]);
+    
+    // Converti in URL assoluta
+    const imageUrl = imgUrlFrom(rawImageUrl);
+    
+    console.log('🖼️ DEBUG Image URL conversion:', {
+      raw: rawImageUrl,
+      converted: imageUrl,
+      hasImage: !!imageUrl
+    });
     
     return (
       <div 
@@ -66,7 +97,14 @@ const Properties = ({ onViewDetails }) => {
               src={imageUrl} 
               alt={property.title}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              onError={() => setImageError(true)}
+              onError={(e) => {
+                console.error('❌ Image load error:', {
+                  src: e.target.src,
+                  originalUrl: rawImageUrl,
+                  convertedUrl: imageUrl
+                });
+                setImageError(true);
+              }}
             />
           ) : (
             <PlaceholderImage 

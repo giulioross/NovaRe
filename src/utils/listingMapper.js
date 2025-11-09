@@ -10,7 +10,19 @@
 export const mapListingFromBackend = (backendListing) => {
   if (!backendListing) return null;
 
-  return {
+  // Log dettagliato della mappatura delle immagini
+  console.log(`🔄 listingMapper - Mappatura immobile ID: ${backendListing.id}`, {
+    original: {
+      immaginePrincipale: backendListing.immaginePrincipale,
+      imageUrl: backendListing.imageUrl,
+      immagini: backendListing.immagini,
+      images: backendListing.images,
+      photoUrls: backendListing.photoUrls,
+      photos: backendListing.photos
+    }
+  });
+
+  const mapped = {
     // Campi base
     id: backendListing.id,
     title: backendListing.titolo || backendListing.title || '',
@@ -43,6 +55,17 @@ export const mapListingFromBackend = (backendListing) => {
     // Manteniamo i campi originali per compatibilità
     ...backendListing
   };
+
+  // Log del risultato della mappatura
+  console.log(`✅ listingMapper - Immobile mappato ID: ${mapped.id}`, {
+    mapped: {
+      imageUrl: mapped.imageUrl,
+      images: mapped.images,
+      hasImages: !!(mapped.imageUrl || (mapped.images && mapped.images.length > 0))
+    }
+  });
+
+  return mapped;
 };
 
 /**
@@ -134,9 +157,9 @@ export const mapListingToBackend = (frontendListing) => {
     // Tipo contratto
     tipoContratto: frontendListing.type || frontendListing.contractType || 'VENDITA',
     
-    // Immagini - inviamo il primo come principale e tutti come array
+    // Immagini - per ora inviamo solo l'immagine principale
     immaginePrincipale: imageUrls[0] || null,
-    immagini: imageUrls,
+    // immagini: imageUrls, // Commentato temporaneamente se il backend non supporta ancora array
     
     // Campi aggiuntivi se presenti
     pubblicato: frontendListing.published !== undefined ? frontendListing.published : true

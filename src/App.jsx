@@ -68,7 +68,7 @@ function App() {
 
   return (
     <div className="App">
-      {/* Bottone per accedere alla demo (visibile solo in sviluppo) */}
+      {/* Pulsante per accedere alla demo (visibile solo in sviluppo) */}
       {import.meta.env.DEV && (
         <div style={{
           position: 'fixed',

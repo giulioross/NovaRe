@@ -1,0 +1,10 @@
+{
+  "title": "Appartamento Test Multipart",
+  "description": "Descrizione di test per la funzionalità multipart",
+  "address": "Via Test 123",
+  "city": "Milano",
+  "bedrooms": 2,
+  "bathrooms": 1,
+  "price": 250000,
+  "published": true
+}
