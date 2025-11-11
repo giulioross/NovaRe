@@ -59,8 +59,8 @@ const About = () => {
   return (
     <section className="section about about-blue" id="chi-siamo">
       <div className="container">
-        <h2 className="section-title">Chi siamo</h2>
-        <p className="section-subtitle">
+        <h2 className="section-title text-white">Chi siamo</h2>
+        <p className="section-subtitle text-white">
           Nova RE nasce dalla volontà di innovare il settore immobiliare, 
           integrando digitalizzazione, trasparenza, empatia ed esperienza.
         </p>
@@ -166,7 +166,7 @@ const About = () => {
 
         {/* Team */}
         <div className="team">
-          <h2 className="section-title">Il Nostro Team</h2>
+          <h2 className="section-title text-white">Il Nostro Team</h2>
           <div className="team-grid">
             {teamMembers.map((member, index) => (
               <div 

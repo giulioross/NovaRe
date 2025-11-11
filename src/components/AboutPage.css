@@ -1,0 +1,67 @@
+/* RESET & TOKENS */
+:root{
+--bg: #0f1216; /* fondo scuro elegante */
+--bg-2: #151a20; /* scuro alternato */
+--panel: #0b0f14;
+--muted: #f6f7f9;
+--text: #111318;
+--text-invert: #ffffff;
+--primary: #6ea6ff; /* accento blu */
+--primary-600: #4a8dff;
+--ring: rgba(110,166,255,0.35);
+--radius: 16px;
+--shadow: 0 6px 24px rgba(0,0,0,.2);
+--container: 1160px;
+}
+
+
+*{box-sizing:border-box}
+html,body,#root,.page-container{height:100%}
+body{margin:0;color:var(--text);font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";line-height:1.6;background:#fff}
+
+
+.container{max-width:var(--container);margin-inline:auto;padding:0 20px}
+.section-title{font-size:clamp(28px,3.5vw,40px);margin:0 0 20px}
+.section-subtitle{margin:-6px 0 32px;color:#555}
+.display{font-size:clamp(36px,6vw,64px);line-height:1.05;margin:6px 0 14px}
+.lead{font-size:clamp(16px,2.4vw,18px);color:#e2e7ee;opacity:.95}
+.eyebrow{letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:#a8b3c7}
+.text-invert{color:var(--text-invert)}
+
+
+/* GENERIC SECTIONS */
+section{padding:72px 0}
+.section--dark{background:var(--bg);color:var(--text-invert)}
+.section--accent{background:linear-gradient(180deg,#f3f7ff, #ffffff)}
+.section--muted{background:#fafbfd}
+
+
+/* HERO */
+.about-hero{position:relative;overflow:hidden}
+.about-hero__inner{max-width:860px}
+.hero-bg{position:absolute;inset:-2px;z-index:-1;background:radial-gradient(60% 80% at 80% 0%,rgba(110,166,255,.35),transparent 60%),linear-gradient(180deg,rgba(15,18,22,0.2),rgba(15,18,22,.9)),url("https://www.novareimmobiliare.it/NovaRe_Hero.webp") center/cover no-repeat;filter:saturate(1.1) contrast(1.05)}
+
+
+/* SPLIT */
+.about-split .split-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center}
+@media (max-width: 960px){.about-split .split-grid{grid-template-columns:1fr;}}
+.mockup{margin:0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);background:#000}
+.mockup img{width:100%;height:auto;display:block}
+.intro{font-size:18px;font-weight:600}
+
+
+/* VALORI (2 CARD) */
+.values{background:#fff}
+.values .values-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+@media (max-width: 900px){.values .values-grid{grid-template-columns:1fr}}
+.value-card{background:#fff;border:1px solid #eef1f6;border-radius:var(--radius);padding:24px 22px;box-shadow:0 1px 0 rgba(0,0,0,.04);transition:transform .2s ease, box-shadow .2s ease}
+.value-card:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.value-icon{font-size:26px;margin-bottom:12px}
+.value-card h3{margin:6px 0 8px}
+.value-card p{margin:0;color:#374151}
+
+
+/* NUMERI (4 CARD IN RIGA) */
+.numbers{position:relative}
+.numbers-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.submit-btn:hover{background:var(--primary-600)}

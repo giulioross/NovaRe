@@ -93,6 +93,13 @@ const Contact = () => {
     }
   };
 
+  // Funzione per aprire Google Maps con l'indirizzo della sede
+  const openGoogleMaps = (address) => {
+    const encodedAddress = encodeURIComponent(address);
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+    window.open(mapsUrl, '_blank');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -155,6 +162,9 @@ const Contact = () => {
               key={index}
               className="office-card"
               ref={el => officesRef.current[index] = el}
+              onClick={() => openGoogleMaps(office.address)}
+              style={{ cursor: 'pointer' }}
+              title="Clicca per aprire in Google Maps"
             >
               <div className="office-image">
                 <img src={office.image} alt={office.name} />
@@ -164,6 +174,24 @@ const Contact = () => {
                 <div>📍 {office.address}</div>
                 <div>📞 {office.phone}</div>
                 <div>🕒 {office.hours}</div>
+              </div>
+              <div style={{
+                textAlign: 'center',
+                marginTop: '10px',
+                color: '#007bff',
+                fontSize: '0.9rem',
+                fontWeight: '600'
+              }}>
+                🗺️ Clicca per vedere sulla mappa
+              </div>
+              <div style={{
+                textAlign: 'center',
+                marginTop: '5px',
+                color: '#007bff',
+                fontSize: '0.9rem',
+                fontWeight: '500'
+              }}>
+                🗺️ Clicca per vedere sulla mappa
               </div>
             </div>
           ))}
@@ -209,6 +237,7 @@ const Contact = () => {
                   name="nome"
                   value={formData.nome}
                   onChange={handleInputChange}
+                  placeholder="Inserisci il tuo nome"
                   required
                   style={{
                     width: '100%',
@@ -233,6 +262,7 @@ const Contact = () => {
                   name="cognome"
                   value={formData.cognome}
                   onChange={handleInputChange}
+                  placeholder="Inserisci il tuo cognome"
                   required
                   style={{
                     width: '100%',
@@ -265,6 +295,7 @@ const Contact = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
+                  placeholder="esempio@email.com"
                   required
                   style={{
                     width: '100%',
@@ -289,6 +320,7 @@ const Contact = () => {
                   name="telefono"
                   value={formData.telefono}
                   onChange={handleInputChange}
+                  placeholder="+ 39 123 456 7890"
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -314,6 +346,7 @@ const Contact = () => {
                 rows="5"
                 value={formData.messaggio}
                 onChange={handleInputChange}
+                placeholder="Scrivi qui il tuo messaggio, saremo felici di aiutarti..."
                 required
                 style={{
                   width: '100%',

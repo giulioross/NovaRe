@@ -20,6 +20,7 @@ const CompanyRegister = ({ onRegisterSuccess, onBackToLogin }) => {
 
   // Codici agenzia validi (in produzione verranno dal backend)
   const VALID_COMPANY_CODES = [
+    'NUOVARE-SECRET-2025',
     'NOVARE2025',
     'AGENCY001',
     'REALESTATE2025',
@@ -97,35 +98,65 @@ const CompanyRegister = ({ onRegisterSuccess, onBackToLogin }) => {
     setErrors({});
 
     try {
-      // Simula chiamata API per registrazione (in produzione sarà una vera chiamata)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simula registrazione riuscita
-      const userData = {
+      // Chiamata API al backend per registrazione
+      const registrationData = {
         username: formData.username,
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        companyCode: formData.companyCode.toUpperCase(),
-        role: 'agent', // Ruolo base per nuovi utenti
-        registeredAt: new Date().toISOString()
+        password: formData.password,
+        companyCode: formData.companyCode.toUpperCase()
       };
 
-      // Salva i dati utente nel localStorage (in produzione sarà nel database)
-      const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      existingUsers.push(userData);
-      localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
+      console.log('🔄 Invio richiesta registrazione al backend:', registrationData);
 
-      console.log('✅ Registrazione completata:', userData);
-      
-      // Chiama callback di successo
-      if (onRegisterSuccess) {
-        onRegisterSuccess(userData);
+      const response = await fetch('http://localhost:8081/api/admin/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + btoa('admin:ddd')
+        },
+        body: JSON.stringify(registrationData)
+      });
+
+      console.log('📡 Risposta backend:', response.status, response.statusText);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Registrazione completata:', result);
+        
+        // Salva anche nel localStorage per compatibilità con il sistema esistente
+        const userData = {
+          username: formData.username,
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          companyCode: formData.companyCode.toUpperCase(),
+          role: 'agent',
+          registeredAt: new Date().toISOString()
+        };
+
+        const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        existingUsers.push(userData);
+        localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
+        
+        // Chiama callback di successo
+        if (onRegisterSuccess) {
+          onRegisterSuccess(userData);
+        }
+      } else {
+        const errorData = await response.text();
+        console.error('❌ Errore backend:', errorData);
+        
+        if (response.status === 400) {
+          setErrors({ submit: 'Dati non validi o codice azienda errato' });
+        } else if (response.status === 409) {
+          setErrors({ submit: 'Username già esistente' });
+        } else {
+          setErrors({ submit: 'Errore del server. Riprova più tardi.' });
+        }
       }
 
     } catch (error) {
-      console.error('❌ Errore registrazione:', error);
-      setErrors({ submit: 'Errore durante la registrazione. Riprova.' });
+      console.error('❌ Errore di rete:', error);
+      setErrors({ submit: 'Errore di connessione al server. Verifica che il backend sia attivo.' });
     } finally {
       setIsSubmitting(false);
     }

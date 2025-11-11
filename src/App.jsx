@@ -8,6 +8,7 @@ import AllPropertiesPage from './components/AllPropertiesPage';
 import ListingDetailPage from './components/ListingDetailPage';
 import AuthManager from './components/AuthManager';
 import AdvancedAdminPanel from './components/AdvancedAdminPanel';
+import AboutPage from './components/AboutPage';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/immobili" element={<AllPropertiesPage />} />
       <Route path="/listing/:id" element={<ListingDetailPage />} />
+      <Route path="/about" element={<AboutPage />} />
       <Route path="/admin" element={<AuthManager />} />
       <Route path="/dashboard" element={<AdvancedAdminPanel />} />
     </Routes>

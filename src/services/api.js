@@ -75,10 +75,15 @@ export const healthService = {
   // Testa la connessione al backend
   async check() {
     try {
-      const response = await fetch(`${API_BASE}/health`);
+      const response = await fetch(`${API_BASE}/health`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       return response.ok;
     } catch (error) {
-      console.log('Backend non raggiungibile');
+      // Silenzioso - non logghiamo errori in console
       return false;
     }
   }

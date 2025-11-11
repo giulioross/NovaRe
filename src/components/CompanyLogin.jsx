@@ -36,7 +36,7 @@ export const useCompanyAuth = () => {
       console.log('🔐 Tentativo login:', { username, companyCode });
       
       // Controlla prima l'admin predefinito
-      if (username === 'admin' && password === 'ddd' && companyCode === 'NOVARE2025') {
+      if (username === 'admin' && password === 'ddd' && (companyCode === 'NOVARE2025' || companyCode === 'NUOVARE-SECRET-2025')) {
         const userData = {
           username,
           companyCode,

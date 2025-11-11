@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const isHomePage = location.pathname === '/';
@@ -31,14 +32,8 @@ const Navbar = () => {
       // Se non siamo nella homepage, naviga prima alla homepage poi scrolla
       window.location.href = `/#${sectionId}`;
     }
-  };
-
-  const scrollToContact = () => {
-    if (isHomePage) {
-      scrollToSection('contatti');
-    } else {
-      window.location.href = '/#contatti';
-    }
+    // Chiudi il menu mobile dopo il click
+    setMobileMenuOpen(false);
   };
 
   const handleUserIconClick = () => {
@@ -83,17 +78,28 @@ const Navbar = () => {
             />
           </Link>
         </div>
+        {/* Menu Hamburger per Mobile */}
+        <button 
+          className="mobile-menu-toggle"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle mobile menu"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
         <div className="navbar-center">
-          <ul className="nav-menu">
+          <ul className={`nav-menu ${mobileMenuOpen ? 'nav-menu-open' : ''}`}>
             <li>
               {isHomePage ? (
                 <a href="#home" onClick={(e) => { e.preventDefault(); scrollToSection('home'); }}>Home</a>
               ) : (
-                <Link to="/">Home</Link>
+                <Link to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
               )}
             </li>
             <li>
-              <Link to="/immobili">Immobili</Link>
+              <Link to="/immobili" onClick={() => setMobileMenuOpen(false)}>Immobili</Link>
             </li>
             <li>
               <a href="#chi-siamo" onClick={(e) => { e.preventDefault(); scrollToSection('chi-siamo'); }}>Chi siamo</a>
@@ -107,10 +113,6 @@ const Navbar = () => {
           </ul>
           
           <div className="navbar-right">
-            <button className="contact-btn" onClick={scrollToContact}>
-              Contattaci
-            </button>
-            
             <div className="user-menu-container">
               <div className="user-icon" onClick={handleUserIconClick}>
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">

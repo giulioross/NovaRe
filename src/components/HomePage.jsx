@@ -19,14 +19,17 @@ const HomePage = () => {
   const [showDemo, setShowDemo] = useState(false);
   const navigate = useNavigate();
 
-  // Test connessione backend all'avvio
+  // Test connessione backend all'avvio (silenzioso)
   useEffect(() => {
     const testBackendConnection = async () => {
       try {
-        await healthService.checkHealth();
-        console.log('✅ Backend connesso correttamente!');
+        const isHealthy = await healthService.check();
+        if (isHealthy) {
+          console.log('✅ Sistema operativo');
+        }
       } catch (error) {
-        console.warn('⚠️ Backend non raggiungibile:', error.message);
+        // Ignoriamo silenziosamente gli errori di connessione
+        console.debug('Backend in modalità manutenzione');
       }
     };
 
