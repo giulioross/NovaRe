@@ -30,20 +30,39 @@
     <div class="test-section">
         <h2>3. Test Admin Login</h2>
         <input type="text" id="username" placeholder="Username" value="admin">
-        <input type="password" id="password" placeholder="Password" value="password">
+        <input type="password" id="password" placeholder="Password" value="ddd">
         <button onclick="testAdminLogin()">Test Login</button>
         <div id="login-result" class="result"></div>
     </div>
 
     <div class="test-section">
         <h2>4. Test Immobile Specifico</h2>
-        <input type="text" id="listing-id" placeholder="ID Immobile">
+        <input type="text" id="listing-id" placeholder="ID Immobile" value="3">
         <button onclick="testSpecificListing()">Carica Immobile</button>
         <div id="specific-result" class="result"></div>
     </div>
 
+    <div class="test-section">
+        <h2>5. Test Aggiorna JSON (PUT) - DEBUG 401</h2>
+        <input type="text" id="put-username" placeholder="Username" value="admin"><br>
+        <input type="password" id="put-password" placeholder="Password" value="ddd"><br>
+        <input type="text" id="put-listing-id" placeholder="ID Immobile" value="3"><br>
+        <button onclick="testUpdateJson()">Aggiorna (PUT JSON)</button>
+        <div id="updateOut" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>6. Test Upload Foto (POST) - DEBUG 401</h2>
+        <input type="text" id="post-username" placeholder="Username" value="admin"><br>
+        <input type="password" id="post-password" placeholder="Password" value="ddd"><br>
+        <input type="text" id="post-listing-id" placeholder="ID Immobile" value="3"><br>
+        <input type="file" id="photo-file" multiple accept="image/*"><br>
+        <button onclick="testUploadPhotos()">Upload Foto (POST)</button>
+        <div id="uploadOut" class="result"></div>
+    </div>
+
     <script>
-        const API_BASE = 'http://localhost:3000';
+        const API_BASE = 'http://localhost:8081';
 
         async function testConnection() {
             const result = document.getElementById('connection-result');
@@ -141,6 +160,120 @@
                 }
             } catch (error) {
                 result.innerHTML = `<div class="error">❌ Errore: ${error.message}</div>`;
+            }
+        }
+
+        // TEST PUT JSON - DEBUG 401
+        async function testUpdateJson() {
+            const result = document.getElementById('updateOut');
+            const username = document.getElementById('put-username').value;
+            const password = document.getElementById('put-password').value;
+            const listingId = document.getElementById('put-listing-id').value;
+            
+            console.clear();
+            console.log('🔍 DEBUG PUT - Starting test...');
+            
+            const testDto = {
+                title: "Test Update " + new Date().toLocaleTimeString(),
+                description: "Test update from test-backend.html",
+                price: 350000
+            };
+            
+            try {
+                const auth = 'Basic ' + btoa(username + ':' + password);
+                console.log('🔑 Authorization header:', auth);
+                
+                const response = await fetch(`${API_BASE}/api/admin/listings/${listingId}/json`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': auth
+                    },
+                    body: JSON.stringify(testDto)
+                });
+                
+                console.log('📡 Response status:', response.status);
+                console.log('📡 Response headers:', [...response.headers.entries()]);
+                
+                const responseText = await response.text();
+                console.log('📦 Response body (raw):', responseText);
+                
+                let responseData;
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    responseData = { rawText: responseText };
+                }
+                
+                if (response.ok) {
+                    result.innerHTML = `<div class="success">✅ PUT SUCCESS: ${response.status}</div><pre>${JSON.stringify(responseData, null, 2)}</pre>`;
+                } else {
+                    result.innerHTML = `<div class="error">❌ PUT FAILED: ${response.status}</div><pre>RESPONSE JSON:\n${JSON.stringify(responseData, null, 2)}</pre>`;
+                }
+                
+            } catch (error) {
+                console.error('🚨 Error:', error);
+                result.innerHTML = `<div class="error">❌ ERROR: ${error.message}</div>`;
+            }
+        }
+
+        // TEST POST PHOTOS - DEBUG 401
+        async function testUploadPhotos() {
+            const result = document.getElementById('uploadOut');
+            const username = document.getElementById('post-username').value;
+            const password = document.getElementById('post-password').value;
+            const listingId = document.getElementById('post-listing-id').value;
+            const fileInput = document.getElementById('photo-file');
+            
+            console.clear();
+            console.log('🔍 DEBUG POST - Starting test...');
+            
+            if (!fileInput.files.length) {
+                result.innerHTML = '<div class="error">❌ Seleziona almeno un file</div>';
+                return;
+            }
+            
+            try {
+                const auth = 'Basic ' + btoa(username + ':' + password);
+                console.log('🔑 Authorization header:', auth);
+                
+                const formData = new FormData();
+                for (let file of fileInput.files) {
+                    formData.append('photos', file);
+                    console.log('📎 Added file:', file.name, file.size, 'bytes');
+                }
+                
+                const response = await fetch(`${API_BASE}/api/admin/listings/${listingId}/photos`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': auth
+                        // Non settare Content-Type per FormData
+                    },
+                    body: formData
+                });
+                
+                console.log('📡 Response status:', response.status);
+                console.log('📡 Response headers:', [...response.headers.entries()]);
+                
+                const responseText = await response.text();
+                console.log('📦 Response body (raw):', responseText);
+                
+                let responseData;
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    responseData = { rawText: responseText };
+                }
+                
+                if (response.ok) {
+                    result.innerHTML = `<div class="success">✅ POST SUCCESS: ${response.status}</div><pre>${JSON.stringify(responseData, null, 2)}</pre>`;
+                } else {
+                    result.innerHTML = `<div class="error">❌ POST FAILED: ${response.status}</div><pre>RESPONSE JSON:\n${JSON.stringify(responseData, null, 2)}</pre>`;
+                }
+                
+            } catch (error) {
+                console.error('🚨 Error:', error);
+                result.innerHTML = `<div class="error">❌ ERROR: ${error.message}</div>`;
             }
         }
 

@@ -21,9 +21,15 @@ const Footer = () => {
               />
             </div>
             <p>
-              La tua agenzia immobiliare di fiducia a Roma. 
-              Professionalità, trasparenza e risultati garantiti.
+              Nova RE - La tua agenzia immobiliare di fiducia a Roma.<br />
+              Professionalità, esperienza e dedizione per trovare<br />
+              la casa dei tuoi sogni.
             </p>
+            <div className="footer-social">
+              <a href="tel:+393453454186" className="social-link">📞</a>
+              <a href="mailto:info@novareimmobiliare.it" className="social-link">✉️</a>
+              <a href="https://wa.me/393453454186" target="_blank" rel="noopener noreferrer" className="social-link">💬</a>
+            </div>
           </div>
           
           <div className="footer-section">

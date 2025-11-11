@@ -54,6 +54,13 @@ const AdminEditListing = ({ listing, username, password, onSuccess, onCancel }) 
             photos: listing.photos
           });
           
+          // Helper per costruire URL assolute delle immagini
+          const imgUrlFrom = (photo) => {
+            if (!photo) return '';
+            return (photo.startsWith('http://') || photo.startsWith('https://')) ? 
+              photo : `${import.meta.env.VITE_API_BASE || 'http://localhost:8081'}${photo}`;
+          };
+          
           // Gestisci diversi formati di immagine dal backend
           let imageUrls = [];
           
@@ -67,9 +74,13 @@ const AdminEditListing = ({ listing, username, password, onSuccess, onCancel }) 
             imageUrls = [listing.imageUrl];
           }
           
-          // Converte le URL in formato che ImageUploader può gestire
-          // ImageUploader si aspetta base64 o URL diretti come stringhe
-          return imageUrls.filter(url => url && typeof url === 'string');
+          // Converte le URL in formato assoluto per ImageUploader
+          const absoluteUrls = imageUrls
+            .filter(url => url && typeof url === 'string')
+            .map(url => imgUrlFrom(url));
+            
+          console.log('✅ DEBUG Edit - Immagini processate per ImageUploader:', absoluteUrls);
+          return absoluteUrls;
         })()
       });
     }
@@ -156,7 +167,7 @@ const AdminEditListing = ({ listing, username, password, onSuccess, onCancel }) 
       console.log('✅ SAFE FLOW - Aggiornamento completato:', result);
 
       // success: aggiorna UI con result (listing aggiornato)
-      let finalListing = updatedListing;
+      let finalListing = result;
       if (files.length > 0) {
         console.log('� Step 2: Upload foto...');
         console.log('📸 DEBUG NEW FLOW - File da caricare:', files);
@@ -483,7 +494,42 @@ const AdminEditListing = ({ listing, username, password, onSuccess, onCancel }) 
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
               Immagini Annuncio
+              {formData.images.length > 0 && (
+                <span style={{ 
+                  fontSize: '0.85rem', 
+                  color: '#28a745', 
+                  fontWeight: 'normal',
+                  marginLeft: '10px'
+                }}>
+                  ({formData.images.length} immagini caricate)
+                </span>
+              )}
             </label>
+            
+            {/* Info helper per gestione immagini esistenti */}
+            {formData.images.length > 0 && (
+              <div style={{ 
+                background: '#f8f9fa', 
+                border: '1px solid #dee2e6', 
+                borderRadius: '5px', 
+                padding: '10px', 
+                marginBottom: '15px',
+                fontSize: '0.85rem',
+                color: '#6c757d'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
+                  <span>ℹ️</span>
+                  <strong>Gestione Immagini:</strong>
+                </div>
+                <ul style={{ margin: '0', paddingLeft: '20px' }}>
+                  <li>🔄 <strong>Riordina:</strong> Trascina le immagini per cambiare la sequenza</li>
+                  <li>🗑️ <strong>Elimina:</strong> Clicca la X rossa su ogni immagine</li>
+                  <li>➕ <strong>Aggiungi:</strong> Usa il pulsante qui sotto per aggiungere nuove foto</li>
+                  <li>🏠 <strong>Prima immagine:</strong> Sarà quella principale dell'annuncio</li>
+                </ul>
+              </div>
+            )}
+            
             <ImageUploader
               images={formData.images}
               onImagesChange={handleImagesChange}

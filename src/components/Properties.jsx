@@ -1,52 +1,66 @@
-import React, { useState, useEffect } from 'react';
-import LoadingSpinner from './LoadingSpinner';
-import { useListings } from '../hooks/useListings';
-import PlaceholderImage from './PlaceholderImage';
-import { API_BASE } from '../services/listingService.js';
+import React from 'react';
+import { Link } from 'react-router-dom';
 
-const Properties = ({ onViewDetails }) => {
-  const { listings: properties, loading, error, refetch } = useListings();
-  const [filter, setFilter] = useState('all');
+const Properties = () => {
+  return (
+    <section className="section properties properties-blue" id="immobili">
+      <div className="container">
+        <h2 className="section-title text-white">Immobili in evidenza</h2>
+        <p className="section-subtitle text-white">
+          Scopri la nostra selezione di immobili di prestigio a Roma. 
+          Ogni proprietà è selezionata per qualità, posizione e valore.
+        </p>
+        
+        {/* Bottoni per navigare agli immobili */}
+        <div className="properties-buttons">
+          <Link
+            to="/immobili"
+            className="property-btn primary"
+          >
+            🏠 Tutti gli Immobili
+          </Link>
+          
+          <Link
+            to="/immobili?type=vendita"
+            className="property-btn secondary"
+          >
+            💰 Immobili in Vendita
+          </Link>
+          
+          <Link
+            to="/immobili?type=affitto"
+            className="property-btn secondary"
+          >
+            🔑 Immobili in Affitto
+          </Link>
+          
+          <Link
+            to="/immobili?category=residential"
+            className="property-btn secondary"
+          >
+            🏡 Residenziali
+          </Link>
+          
+          <Link
+            to="/immobili?category=commercial"
+            className="property-btn secondary"
+          >
+            🏢 Commerciali
+          </Link>
+          
+          <Link
+            to="/immobili?location=centro"
+            className="property-btn secondary"
+          >
+            🏛️ Centro Storico
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+};
 
-  // Helper per costruire URL assolute delle immagini
-  const imgUrlFrom = (photo) => {
-    if (!photo) return '';
-    return (photo.startsWith('http://') || photo.startsWith('https://')) ? 
-      photo : `${API_BASE}${photo}`;
-  };
-
-  // Funzione per filtrare gli immobili
-  const filterProperties = (type) => {
-    setFilter(type);
-  };
-
-  // Funzione per pre-compilare il form di contatto
-  const contactForProperty = (title, price) => {
-    const messageField = document.getElementById('messaggio');
-    if (messageField) {
-      messageField.value = `Salve, sono interessato all'immobile "${title}" a ${price}. Vorrei ricevere maggiori informazioni. Grazie.`;
-    }
-    // Scroll to contact section
-    const contactSection = document.getElementById('contatti');
-    if (contactSection) {
-      contactSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  // Filtra le proprietà in base al filtro selezionato
-  const filteredProperties = properties.filter(property => {
-    if (filter === 'all') return true;
-    return property.contractType?.toLowerCase() === filter;
-  });
-
-  // Escape HTML per sicurezza
-  const escapeHtml = (text) => {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  };
-
-  // Componente per singola proprietà
+export default Properties;
   const PropertyCard = ({ property }) => {
     const [imageError, setImageError] = useState(false);
     const price = property.contractType === 'VENDITA' ? 
@@ -131,7 +145,7 @@ const Properties = ({ onViewDetails }) => {
         </div>
         
         <div style={{ padding: '25px' }}>
-          <h3 style={{ color: '#007bff', fontSize: '1.2rem', marginBottom: '10px' }}>
+          <h3 style={{ color: 'var(--color-primary)', fontSize: '1.2rem', marginBottom: '10px' }}>
             {property.title}
           </h3>
           
@@ -165,17 +179,17 @@ const Properties = ({ onViewDetails }) => {
             alignItems: 'center', 
             marginTop: '20px' 
           }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: '700', color: '#007bff' }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: '700', color: 'var(--color-primary)' }}>
               {price}
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button 
-                onClick={() => property.onViewDetails && property.onViewDetails(property.id)}
+                onClick={() => onViewDetails && onViewDetails(property.id)}
                 style={{
                   background: 'transparent',
-                  color: '#007bff',
+                  color: 'var(--color-accent)',
                   padding: '8px 16px',
-                  border: '2px solid #007bff',
+                  border: '2px solid var(--color-accent)',
                   borderRadius: '25px',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -183,12 +197,12 @@ const Properties = ({ onViewDetails }) => {
                   transition: 'all 0.3s'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = '#007bff';
+                  e.target.style.background = 'var(--color-accent)';
                   e.target.style.color = 'white';
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.background = 'transparent';
-                  e.target.style.color = '#007bff';
+                  e.target.style.color = 'var(--color-accent)';
                 }}
               >
                 Dettagli
@@ -196,7 +210,7 @@ const Properties = ({ onViewDetails }) => {
               <button 
                 onClick={() => contactForProperty(property.title, price)}
                 style={{
-                  background: 'linear-gradient(45deg, #007bff, #0056b3)',
+                  background: 'linear-gradient(45deg, var(--color-primary), var(--color-secondary))',
                   color: 'white',
                   padding: '8px 16px',
                   border: 'none',
@@ -216,51 +230,89 @@ const Properties = ({ onViewDetails }) => {
   };
 
   return (
-    <section className="section properties" id="immobili">
+    <section className="section properties properties-blue" id="immobili">
       <div className="container">
-        <h2 className="section-title">Immobili in evidenza</h2>
-        <p className="section-subtitle">
+        <h2 className="section-title text-white">Immobili in evidenza</h2>
+        <p className="section-subtitle text-white">
           Scopri la nostra selezione di immobili di prestigio a Roma. 
           Ogni proprietà è selezionata per qualità, posizione e valore.
         </p>
         
-        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <button
-            onClick={() => {
-              refetch();
-              console.log('🔄 Ricaricamento immobili richiesto');
-            }}
-            disabled={loading}
-            style={{
-              background: loading ? '#ccc' : '#28a745',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              borderRadius: '25px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontWeight: '600',
-              fontSize: '0.9rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              margin: '0 auto',
-              transition: 'all 0.3s'
-            }}
-            onMouseEnter={(e) => {
-              if (!loading) {
-                e.target.style.background = '#218838';
-                e.target.style.transform = 'translateY(-2px)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!loading) {
-                e.target.style.background = '#28a745';
-                e.target.style.transform = 'translateY(0)';
-              }
-            }}
+        {/* Bottoni per navigare agli immobili */}
+        <div className="properties-buttons">
+          <Link
+            to="/immobili"
+            className="property-btn primary"
           >
-            {loading ? '🔄 Aggiornamento...' : '🔄 Aggiorna Annunci'}
-          </button>
+            🏠 Tutti gli Immobili
+          </Link>
+          
+          <Link
+            to="/immobili?type=vendita"
+            className="property-btn secondary"
+          >
+            💰 Immobili in Vendita
+          </Link>
+          
+          <Link
+            to="/immobili?type=affitto"
+            className="property-btn secondary"
+          >
+            🔑 Immobili in Affitto
+          </Link>
+          
+          <Link
+            to="/immobili?category=residential"
+            className="property-btn secondary"
+          >
+            🏡 Residenziali
+          </Link>
+          
+          <Link
+            to="/immobili?category=commercial"
+            className="property-btn secondary"
+          >
+            🏢 Commerciali
+          </Link>
+          
+          <Link
+            to="/immobili?location=centro"
+            className="property-btn secondary"
+          >
+            🏛️ Centro Storico
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Properties;
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '25px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '0.9rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                textDecoration: 'none',
+                transition: 'all 0.3s'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 5px 15px rgba(255, 107, 0, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = 'none';
+              }}
+            >
+              🏠 Vedi tutti gli immobili
+            </Link>
+          </div>
         </div>
         
         {/* Filtri immobili */}
@@ -274,9 +326,9 @@ const Properties = ({ onViewDetails }) => {
           <button 
             className="btn" 
             style={{
-              background: filter === 'all' ? '#007bff' : 'white',
-              color: filter === 'all' ? 'white' : '#007bff',
-              border: '2px solid #007bff'
+              background: filter === 'all' ? 'var(--color-primary)' : 'white',
+              color: filter === 'all' ? 'white' : 'var(--color-primary)',
+              border: '2px solid var(--color-primary)'
             }}
             onClick={() => filterProperties('all')}
           >
@@ -285,9 +337,9 @@ const Properties = ({ onViewDetails }) => {
           <button 
             className="btn" 
             style={{
-              background: filter === 'vendita' ? '#007bff' : 'white',
-              color: filter === 'vendita' ? 'white' : '#007bff',
-              border: '2px solid #007bff'
+              background: filter === 'vendita' ? 'var(--color-primary)' : 'white',
+              color: filter === 'vendita' ? 'white' : 'var(--color-primary)',
+              border: '2px solid var(--color-primary)'
             }}
             onClick={() => filterProperties('vendita')}
           >

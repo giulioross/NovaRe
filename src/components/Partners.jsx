@@ -52,7 +52,7 @@ const Partners = () => {
   ];
 
   return (
-    <section className="section" id="partner">
+    <section className="section" id="partner" style={{backgroundImage: 'url("https://plus.unsplash.com/premium_photo-1675975678457-d70708bf77c8?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NTd8fHJvbWElMjBpbGx1bWluYXRhJTIwZ2lvcm5vfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600")'}}>
       <div className="container">
         <h2 className="section-title">I nostri partner</h2>
         <p className="section-subtitle">

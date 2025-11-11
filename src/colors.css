@@ -1,0 +1,42 @@
+/* NOVA RE - PALETTE COLORI ORIGINALE */
+:root {
+  /* Colori Esatti dal Sito Originale Nova RE */
+  --color-primary: #1a365d;      /* Blu scuro Nova RE */
+  --color-secondary: #2c5282;    /* Blu medio Nova RE */
+  --color-accent: #4299e1;       /* Blu chiaro accento */
+  --color-background: #ffffff;   /* Background bianco pulito */
+  --color-text: #2d3748;         /* Grigio scuro testo */
+  --color-text-light: #718096;   /* Grigio medio testo */
+  
+  /* Gradiente Nova RE */
+  --gradient-primary: linear-gradient(135deg, #1a365d 0%, #2c5282 50%, #4299e1 100%);
+  --gradient-hero: linear-gradient(135deg, rgba(26, 54, 93, 0.9) 0%, rgba(44, 82, 130, 0.9) 100%);
+  
+  /* Varianti sfumatures */
+  --color-primary-light: #2c5282;
+  --color-primary-dark: #0f1c2b;
+  --color-secondary-light: #4299e1;
+  --color-secondary-dark: #1a365d;
+  --color-accent-light: #63b3ed;
+  --color-accent-dark: #3182ce;
+  
+  /* Colori sezioni */
+  --color-section-bg: #f7fafc;
+  --color-card-bg: #ffffff;
+  --color-border: #e2e8f0;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+  
+  /* Colori utility */
+  --color-success: #38a169;
+  --color-warning: #d69e2e;
+  --color-error: #e53e3e;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  
+  /* Colori specifici Nova RE */
+  --nova-blue: #1a365d;
+  --nova-blue-light: #4299e1;
+  --nova-gray: #f7fafc;
+  --nova-text: #2d3748;
+  --nova-accent: #4299e1;
+}

@@ -141,7 +141,7 @@ const Contact = () => {
   };
 
   return (
-    <section className="section contact" id="contatti">
+    <section className="section contact" id="contatti" style={{backgroundImage: 'url("https://plus.unsplash.com/premium_photo-1661962277645-d490f3f3a941?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHhzZWFyY2h8ODF8fHJvbWElMjBpbGx1bWluYXRhJTIwZ2lvcm5vfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600")'}}>
       <div className="container">
         <h2 className="section-title">Contatti</h2>
         <p className="section-subtitle">

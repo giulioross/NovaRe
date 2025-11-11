@@ -3,6 +3,7 @@ import { useListing } from '../hooks/useListings.js';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import PlaceholderImage from './PlaceholderImage.jsx';
 import { formatPrice, formatAddress } from '../utils/listingMapper.js';
+import Navbar from './Navbar.jsx';
 
 /**
  * Pagina dettaglio annuncio completa
@@ -170,298 +171,408 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8f9fa' }}>
-      {/* Header con torna indietro */}
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)' }}>
+      {/* Hero Section con breadcrumb */}
       <div style={{
-        background: 'white',
-        padding: '20px',
-        borderBottom: '1px solid #e1e5e9',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100
+        background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
+        color: 'white',
+        padding: '100px 20px 40px',
+        textAlign: 'center'
       }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          {/* Breadcrumb */}
+          <div style={{ marginBottom: '20px', fontSize: '0.9rem', opacity: 0.9 }}>
+            <span>Home</span> / <span>Immobili</span> / <span>Dettagli</span>
+          </div>
+          
+          {/* Torna indietro */}
           {onBack && (
             <button 
               onClick={onBack}
               style={{
-                background: 'transparent',
-                border: '2px solid #007bff',
-                color: '#007bff',
-                padding: '8px 16px',
+                background: 'rgba(255,255,255,0.2)',
+                border: '2px solid rgba(255,255,255,0.3)',
+                color: 'white',
+                padding: '10px 20px',
                 borderRadius: '25px',
                 cursor: 'pointer',
                 fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
+                marginBottom: '20px',
                 transition: 'all 0.3s'
               }}
               onMouseEnter={(e) => {
-                e.target.style.background = '#007bff';
-                e.target.style.color = 'white';
+                e.target.style.background = 'rgba(255,255,255,0.3)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.background = 'transparent';
-                e.target.style.color = '#007bff';
+                e.target.style.background = 'rgba(255,255,255,0.2)';
               }}
             >
               ← Torna alla lista
             </button>
           )}
+          
           <h1 style={{ 
-            color: '#333', 
-            fontSize: '1.5rem', 
-            fontWeight: '600',
-            margin: 0,
-            flex: 1
+            fontSize: '2.5rem', 
+            fontWeight: '700',
+            margin: '0 0 10px 0',
+            textShadow: '0 2px 4px rgba(0,0,0,0.3)'
           }}>
-            Dettagli Annuncio
+            {listing.title || 'Dettagli Immobile'}
           </h1>
+          
+          <p style={{ 
+            fontSize: '1.2rem', 
+            opacity: 0.9,
+            margin: 0
+          }}>
+            📍 {formatAddress(listing.address, listing.city)}
+          </p>
         </div>
       </div>
 
       {/* Contenuto principale */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '30px 20px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
+        
+        {/* Layout principale - 2 colonne */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '2fr 1fr', 
+          gap: '40px',
+          alignItems: 'start'
+        }}>
           
-          {/* Colonna sinistra - Immagini */}
+          {/* Colonna sinistra - Immagini e Descrizione */}
           <div>
-            {/* Immagine principale */}
-            <div style={{ marginBottom: '20px' }}>
+            {/* Gallery immagini */}
+            <div style={{ 
+              background: 'white',
+              borderRadius: '15px',
+              padding: '20px',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+              marginBottom: '30px'
+            }}>
+              {/* Immagine principale */}
               {images.length > 0 ? (
-                <div style={{ position: 'relative', borderRadius: '15px', overflow: 'hidden' }}>
+                <div style={{ position: 'relative', borderRadius: '15px', overflow: 'hidden', marginBottom: '20px' }}>
                   <img
                     src={images[currentImageIndex]}
                     alt={listing.title}
                     style={{
                       width: '100%',
-                      height: '400px',
+                      height: '450px',
                       objectFit: 'cover',
                       cursor: 'pointer'
                     }}
                     onClick={() => openImageModal(currentImageIndex)}
                   />
                   
-                  {/* Controlli immagine */}
+                  {/* Badge tipo contratto */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '20px',
+                    left: '20px',
+                    background: listing.contractType === 'VENDITA' ? '#28a745' : '#007bff',
+                    color: 'white',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    textTransform: 'uppercase'
+                  }}>
+                    {listing.contractType === 'VENDITA' ? 'In Vendita' : 'In Affitto'}
+                  </div>
+                  
+                  {/* Controlli navigazione immagini */}
                   {images.length > 1 && (
                     <>
                       <button
                         onClick={prevImage}
                         style={{
                           position: 'absolute',
-                          left: '15px',
+                          left: '20px',
                           top: '50%',
                           transform: 'translateY(-50%)',
                           background: 'rgba(0,0,0,0.7)',
                           color: 'white',
                           border: 'none',
                           borderRadius: '50%',
-                          width: '40px',
-                          height: '40px',
+                          width: '50px',
+                          height: '50px',
                           cursor: 'pointer',
-                          fontSize: '1.2rem'
+                          fontSize: '1.5rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
                         }}
                       >
-                        ←
+                        ‹
                       </button>
                       <button
                         onClick={nextImage}
                         style={{
                           position: 'absolute',
-                          right: '15px',
+                          right: '20px',
                           top: '50%',
                           transform: 'translateY(-50%)',
                           background: 'rgba(0,0,0,0.7)',
                           color: 'white',
                           border: 'none',
                           borderRadius: '50%',
-                          width: '40px',
-                          height: '40px',
+                          width: '50px',
+                          height: '50px',
                           cursor: 'pointer',
-                          fontSize: '1.2rem'
+                          fontSize: '1.5rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
                         }}
                       >
-                        →
+                        ›
                       </button>
                     </>
                   )}
 
-                  {/* Indicatore immagine */}
+                  {/* Contatore immagini */}
                   {images.length > 1 && (
                     <div style={{
                       position: 'absolute',
-                      bottom: '15px',
-                      right: '15px',
-                      background: 'rgba(0,0,0,0.7)',
+                      bottom: '20px',
+                      right: '20px',
+                      background: 'rgba(0,0,0,0.8)',
                       color: 'white',
-                      padding: '5px 10px',
-                      borderRadius: '15px',
-                      fontSize: '0.9rem'
+                      padding: '8px 12px',
+                      borderRadius: '20px',
+                      fontSize: '0.9rem',
+                      fontWeight: '600'
                     }}>
                       {currentImageIndex + 1} / {images.length}
                     </div>
                   )}
                 </div>
               ) : (
-                <PlaceholderImage width="100%" height="400px" text="Nessuna immagine disponibile" />
+                <PlaceholderImage width="100%" height="450px" text="Nessuna immagine disponibile" />
+              )}
+
+              {/* Thumbnail grid */}
+              {images.length > 1 && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+                  gap: '10px'
+                }}>
+                  {images.slice(0, 6).map((image, index) => (
+                    <div
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      style={{
+                        borderRadius: '10px',
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        border: index === currentImageIndex ? '3px solid var(--color-primary)' : '2px solid #e1e5e9',
+                        transition: 'all 0.3s',
+                        position: 'relative'
+                      }}
+                    >
+                      <img
+                        src={image}
+                        alt={`Vista ${index + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '80px',
+                          objectFit: 'cover'
+                        }}
+                      />
+                      {index === 5 && images.length > 6 && (
+                        <div style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: 'rgba(0,0,0,0.7)',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.9rem',
+                          fontWeight: '600'
+                        }}>
+                          +{images.length - 6}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
-            {/* Thumbnail immagini */}
-            {images.length > 1 && (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
-                gap: '10px'
-              }}>
-                {images.map((image, index) => (
-                  <div
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    style={{
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      border: index === currentImageIndex ? '3px solid #007bff' : '2px solid #e1e5e9',
-                      transition: 'all 0.3s'
-                    }}
-                  >
-                    <img
-                      src={image}
-                      alt={`Immagine ${index + 1}`}
-                      style={{
-                        width: '100%',
-                        height: '60px',
-                        objectFit: 'cover'
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Colonna destra - Dettagli */}
-          <div>
+            {/* Descrizione */}
             <div style={{
               background: 'white',
               borderRadius: '15px',
               padding: '30px',
               boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
             }}>
+              <h2 style={{ 
+                color: 'var(--color-primary)', 
+                marginBottom: '20px', 
+                fontSize: '1.8rem',
+                fontWeight: '700'
+              }}>
+                Descrizione
+              </h2>
               
-              {/* Titolo e prezzo */}
-              <div style={{ marginBottom: '25px' }}>
-                <h1 style={{ 
-                  fontSize: '2rem', 
-                  fontWeight: '700', 
-                  color: '#333',
-                  marginBottom: '10px',
-                  lineHeight: '1.2'
+              {listing.description ? (
+                <p style={{ 
+                  color: '#666', 
+                  lineHeight: '1.8',
+                  fontSize: '1.1rem',
+                  whiteSpace: 'pre-line',
+                  margin: 0
                 }}>
-                  {listing.title}
-                </h1>
+                  {listing.description}
+                </p>
+              ) : (
+                <p style={{ 
+                  color: '#999', 
+                  fontStyle: 'italic',
+                  fontSize: '1.1rem'
+                }}>
+                  Nessuna descrizione disponibile per questo immobile.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Colonna destra - Info e Contatti */}
+          <div style={{ position: 'sticky', top: '20px' }}>
+            
+            {/* Card Prezzo e Caratteristiche */}
+            <div style={{
+              background: 'white',
+              borderRadius: '15px',
+              padding: '30px',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+              marginBottom: '20px'
+            }}>
+              
+              {/* Prezzo */}
+              <div style={{ 
+                textAlign: 'center',
+                marginBottom: '30px',
+                padding: '20px',
+                background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
+                borderRadius: '15px',
+                color: 'white'
+              }}>
                 <div style={{ 
-                  fontSize: '1.8rem', 
-                  fontWeight: '700', 
-                  color: '#007bff',
-                  marginBottom: '15px'
+                  fontSize: '2.5rem', 
+                  fontWeight: '700',
+                  marginBottom: '5px'
                 }}>
                   {displayPrice}
                 </div>
+                <div style={{ 
+                  fontSize: '1rem', 
+                  opacity: 0.9
+                }}>
+                  {listing.contractType === 'VENDITA' ? 'Prezzo di vendita' : 'Canone mensile'}
+                </div>
               </div>
 
-              {/* Indirizzo */}
-              <div style={{ marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '1.2rem' }}>📍</span>
-                <span style={{ fontSize: '1.1rem', color: '#666' }}>
-                  {formatAddress(listing.address, listing.city)}
-                </span>
-              </div>
-
-              {/* Caratteristiche */}
+              {/* Caratteristiche principali */}
               <div style={{ 
                 display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', 
+                gridTemplateColumns: 'repeat(2, 1fr)', 
                 gap: '15px',
                 marginBottom: '30px'
               }}>
                 {listing.bedrooms > 0 && (
-                  <div style={{ textAlign: 'center', padding: '15px', background: '#f8f9fa', borderRadius: '10px' }}>
-                    <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🛏️</div>
-                    <div style={{ fontWeight: '600', color: '#333' }}>{listing.bedrooms}</div>
+                  <div style={{ 
+                    textAlign: 'center', 
+                    padding: '20px', 
+                    background: '#f8f9fa', 
+                    borderRadius: '15px',
+                    border: '2px solid #e9ecef'
+                  }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🛏️</div>
+                    <div style={{ fontWeight: '700', color: 'var(--color-primary)', fontSize: '1.3rem' }}>
+                      {listing.bedrooms}
+                    </div>
                     <div style={{ fontSize: '0.9rem', color: '#666' }}>Camere</div>
                   </div>
                 )}
                 
                 {listing.bathrooms > 0 && (
-                  <div style={{ textAlign: 'center', padding: '15px', background: '#f8f9fa', borderRadius: '10px' }}>
-                    <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🚿</div>
-                    <div style={{ fontWeight: '600', color: '#333' }}>{listing.bathrooms}</div>
+                  <div style={{ 
+                    textAlign: 'center', 
+                    padding: '20px', 
+                    background: '#f8f9fa', 
+                    borderRadius: '15px',
+                    border: '2px solid #e9ecef'
+                  }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🚿</div>
+                    <div style={{ fontWeight: '700', color: 'var(--color-primary)', fontSize: '1.3rem' }}>
+                      {listing.bathrooms}
+                    </div>
                     <div style={{ fontSize: '0.9rem', color: '#666' }}>Bagni</div>
                   </div>
                 )}
 
                 {listing.size && (
-                  <div style={{ textAlign: 'center', padding: '15px', background: '#f8f9fa', borderRadius: '10px' }}>
-                    <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📐</div>
-                    <div style={{ fontWeight: '600', color: '#333' }}>{listing.size}</div>
-                    <div style={{ fontSize: '0.9rem', color: '#666' }}>m²</div>
+                  <div style={{ 
+                    textAlign: 'center', 
+                    padding: '20px', 
+                    background: '#f8f9fa', 
+                    borderRadius: '15px',
+                    border: '2px solid #e9ecef',
+                    gridColumn: listing.bedrooms && listing.bathrooms ? 'span 2' : 'span 1'
+                  }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📐</div>
+                    <div style={{ fontWeight: '700', color: 'var(--color-primary)', fontSize: '1.3rem' }}>
+                      {listing.size} m²
+                    </div>
+                    <div style={{ fontSize: '0.9rem', color: '#666' }}>Superficie</div>
                   </div>
                 )}
               </div>
 
-              {/* Descrizione */}
-              {listing.description && (
-                <div style={{ marginBottom: '30px' }}>
-                  <h3 style={{ color: '#333', marginBottom: '15px', fontSize: '1.3rem' }}>
-                    Descrizione
-                  </h3>
-                  <p style={{ 
-                    color: '#666', 
-                    lineHeight: '1.6',
-                    fontSize: '1rem',
-                    whiteSpace: 'pre-line'
-                  }}>
-                    {listing.description}
-                  </p>
-                </div>
-              )}
-
-              {/* Pulsanti azione */}
-              <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+              {/* Pulsanti di contatto */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <button
                   onClick={() => {
                     const message = `Salve, sono interessato all'immobile "${listing.title}" a ${displayPrice}. Vorrei ricevere maggiori informazioni. Grazie.`;
-                    const phone = "+39 345 345 4186"; // Numero Nova RE
-                    const whatsappUrl = `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+                    const phone = "+393453454186";
+                    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
                     window.open(whatsappUrl, '_blank');
                   }}
                   style={{
                     background: '#25d366',
                     color: 'white',
                     border: 'none',
-                    padding: '15px 25px',
+                    padding: '18px 25px',
                     borderRadius: '25px',
                     cursor: 'pointer',
-                    fontWeight: '600',
-                    fontSize: '1rem',
+                    fontWeight: '700',
+                    fontSize: '1.1rem',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '10px',
-                    flex: 1,
                     justifyContent: 'center',
-                    transition: 'all 0.3s'
+                    gap: '10px',
+                    transition: 'all 0.3s',
+                    boxShadow: '0 5px 15px rgba(37, 211, 102, 0.3)'
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.background = '#128c7e';
+                    e.target.style.transform = 'translateY(-2px)';
                   }}
                   onMouseLeave={(e) => {
                     e.target.style.background = '#25d366';
+                    e.target.style.transform = 'translateY(0)';
                   }}
                 >
-                  💬 Contatta su WhatsApp
+                  <span style={{ fontSize: '1.3rem' }}>💬</span>
+                  Contatta su WhatsApp
                 </button>
                 
                 <button
@@ -472,30 +583,108 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                     window.location.href = mailtoUrl;
                   }}
                   style={{
-                    background: '#007bff',
+                    background: 'var(--color-primary)',
                     color: 'white',
                     border: 'none',
-                    padding: '15px 25px',
+                    padding: '18px 25px',
                     borderRadius: '25px',
                     cursor: 'pointer',
-                    fontWeight: '600',
-                    fontSize: '1rem',
+                    fontWeight: '700',
+                    fontSize: '1.1rem',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '10px',
-                    flex: 1,
                     justifyContent: 'center',
+                    gap: '10px',
+                    transition: 'all 0.3s',
+                    boxShadow: '0 5px 15px rgba(0, 123, 255, 0.3)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'var(--color-secondary)';
+                    e.target.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'var(--color-primary)';
+                    e.target.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <span style={{ fontSize: '1.3rem' }}>✉️</span>
+                  Invia Email
+                </button>
+
+                <button
+                  onClick={() => {
+                    const phone = "+393453454186";
+                    window.location.href = `tel:${phone}`;
+                  }}
+                  style={{
+                    background: 'transparent',
+                    color: 'var(--color-primary)',
+                    border: '2px solid var(--color-primary)',
+                    padding: '18px 25px',
+                    borderRadius: '25px',
+                    cursor: 'pointer',
+                    fontWeight: '700',
+                    fontSize: '1.1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
                     transition: 'all 0.3s'
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.background = '#0056b3';
+                    e.target.style.background = 'var(--color-primary)';
+                    e.target.style.color = 'white';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.background = '#007bff';
+                    e.target.style.background = 'transparent';
+                    e.target.style.color = 'var(--color-primary)';
                   }}
                 >
-                  ✉️ Invia Email
+                  <span style={{ fontSize: '1.3rem' }}>📞</span>
+                  Chiama Ora
                 </button>
+              </div>
+            </div>
+
+            {/* Card Info Agenzia */}
+            <div style={{
+              background: 'white',
+              borderRadius: '15px',
+              padding: '25px',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+              textAlign: 'center'
+            }}>
+              <img 
+                src="https://www.novareimmobiliare.it/NovaRe_LogoCircle.png" 
+                alt="Nova RE Logo"
+                style={{ 
+                  width: '60px', 
+                  height: '60px', 
+                  marginBottom: '15px',
+                  borderRadius: '50%'
+                }}
+              />
+              <h3 style={{ 
+                color: 'var(--color-primary)', 
+                marginBottom: '10px',
+                fontSize: '1.3rem',
+                fontWeight: '700'
+              }}>
+                Nova RE Immobiliare
+              </h3>
+              <p style={{ 
+                color: '#666', 
+                fontSize: '0.95rem',
+                margin: '0 0 15px 0'
+              }}>
+                Agenzia immobiliare di fiducia a Roma
+              </p>
+              <div style={{ 
+                color: 'var(--color-primary)', 
+                fontSize: '1.1rem',
+                fontWeight: '600'
+              }}>
+                📞 +39 345 345 4186
               </div>
             </div>
           </div>

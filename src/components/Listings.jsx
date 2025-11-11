@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useListings } from '../hooks/useListings.js';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import PlaceholderImage from './PlaceholderImage.jsx';
@@ -14,6 +15,7 @@ import { API_BASE } from '../services/listingService.js';
  */
 const Listings = ({ adminMode = false, adminUsername, adminPassword, onEdit, onDelete }) => {
   const { listings, loading, error, refetch } = useListings();
+  const navigate = useNavigate();
 
   // Helper per costruire URL assolute delle immagini
   const imgUrlFrom = (photo) => {
@@ -335,8 +337,7 @@ const Listings = ({ adminMode = false, adminUsername, adminPassword, onEdit, onD
             
             <button 
               onClick={() => {
-                // Qui potresti aprire un modal o navigare alla pagina di dettaglio
-                console.log('Visualizza dettagli immobile:', listing.id);
+                navigate(`/listing/${listing.id}`);
               }}
               style={{
                 background: 'linear-gradient(45deg, #007bff, #0056b3)',

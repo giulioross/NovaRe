@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import AdminPanel from './AdminPanel.jsx';
+import AdvancedAdminPanel from './AdvancedAdminPanel.jsx';
 import Listings from './Listings.jsx';
 
 /**
  * Pagina demo per testare le funzionalità admin e public
  */
 const DemoPage = () => {
-  const [currentView, setCurrentView] = useState('public'); // 'public' o 'admin'
+  const [currentView, setCurrentView] = useState('public'); // 'public', 'admin'
 
   return (
     <div style={{ minHeight: '100vh' }}>
@@ -81,7 +82,7 @@ const DemoPage = () => {
               transition: 'all 0.3s'
             }}
           >
-            🛠️ Pannello Admin
+             Admin Professionale
           </button>
         </div>
 
@@ -95,6 +96,10 @@ const DemoPage = () => {
       </div>
 
       {/* Contenuto dinamico */}
+      {currentView === 'admin' && (
+        <AdvancedAdminPanel onBack={() => setCurrentView('public')} />
+      )}
+      
       {currentView === 'public' && (
         <div style={{ 
           padding: '40px 20px',
@@ -112,9 +117,7 @@ const DemoPage = () => {
         </div>
       )}
 
-      {currentView === 'admin' && (
-        <AdminPanel />
-      )}
+
 
       {/* Info tecnica */}
       <div style={{
