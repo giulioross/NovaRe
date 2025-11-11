@@ -4,6 +4,57 @@ import { createAdminAuthHeader, getActiveCredentials } from '../utils/authUtils.
 // Costante base API (usando Vite env) - FIXED process.env issue
 export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8081';
 
+/**
+ * Comprimi un'immagine per ridurre la dimensione del file
+ * @param {File} file - File immagine originale
+ * @param {number} maxWidth - Larghezza massima (default 800)
+ * @param {number} quality - Qualità JPEG 0-1 (default 0.6)
+ * @returns {Promise<File>} File compresso
+ */
+async function compressImage(file, maxWidth = 800, quality = 0.6) {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // Calcola le nuove dimensioni mantenendo l'aspect ratio
+      let { width, height } = img;
+      
+      // Ridimensiona se troppo grande
+      if (width > maxWidth || height > maxWidth) {
+        if (width > height) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        } else {
+          width = (width * maxWidth) / height;
+          height = maxWidth;
+        }
+      }
+      
+      // Imposta le dimensioni del canvas
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Disegna l'immagine ridimensionata con migliore qualità
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Converti in blob compresso
+      canvas.toBlob((blob) => {
+        const compressedFile = new File([blob], file.name, {
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        });
+        resolve(compressedFile);
+      }, 'image/jpeg', quality);
+    };
+    
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 // Helper per creare header auth (aggiornato)
 export function makeAuthHeader(username, password) {
   if (!username || !password) return null;
@@ -122,7 +173,8 @@ export const listingService = {
       // Step 2: Upload foto se presenti
       if (files.length > 0) {
         console.log('📸 Step 2: Upload foto per immobile creato:', createdListing.id);
-        const updatedListing = await this.uploadPhotos(createdListing.id, files, credentials.username, credentials.password);
+        const authHeader = `Basic ${btoa(`${credentials.username}:${credentials.password}`)}`;
+        const updatedListing = await this.uploadPhotos(createdListing.id, files, authHeader);
         return updatedListing || createdListing;
       }
 
@@ -216,52 +268,7 @@ export const listingService = {
     }
   },
 
-  /**
-   * Carica foto per un immobile esistente (admin) - OPZIONE A: Upload separato
-   * @param {string|number} id - ID dell'immobile
-   * @param {Array} files - Array di file immagini
-   * @param {string} username - Username admin (opzionale)
-   * @param {string} password - Password admin (opzionale)
-   * @returns {Promise<Object>} Immobile aggiornato con photoUrls
-   */
-  async uploadPhotos(id, files = [], username, password) {
-    try {
-      if (files.length === 0) {
-        console.log('📸 Nessuna foto da caricare');
-        return null;
-      }
 
-      // Usa credenziali predefinite se non specificate
-      const credentials = username && password ? 
-        { username, password } : 
-        getActiveCredentials();
-
-      console.log('🔄 Step 2: Upload foto separato');
-      console.log('📸 File da caricare:', files.length);
-
-      // Crea FormData per le foto
-      const formData = new FormData();
-      files.forEach((file, index) => {
-        console.log(`📸 Aggiungendo file ${index + 1}:`, file.name || `file-${index + 1}`);
-        formData.append('photos', file); // Nome 'photos' come richiesto dal backend
-      });
-
-      const response = await apiClient.post(`/api/admin/listings/${id}/photos`, formData, {
-        headers: {
-          'Authorization': `Basic ${btoa(`${credentials.username}:${credentials.password}`)}`
-          // NON impostare Content-Type - axios gestisce automaticamente multipart/form-data
-        }
-      });
-      
-      console.log('✅ Foto caricate con successo:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error(`❌ Errore nel caricamento foto per immobile ${id}:`, error);
-      console.error('📋 Status:', error.response?.status);
-      console.error('📋 Response data:', error.response?.data);
-      throw error;
-    }
-  },
 
   /**
    * Elimina un immobile (admin)
@@ -272,18 +279,29 @@ export const listingService = {
    */
   async deleteListing(id, username, password) {
     try {
+      console.log('🗑️ deleteListing chiamata con:', { id, username, hasPassword: !!password });
+      
       // Usa credenziali predefinite se non specificate
       const credentials = username && password ? 
         { username, password } : 
         getActiveCredentials();
 
+      console.log('🔐 Credenziali usate:', { username: credentials.username, hasPassword: !!credentials.password });
+
       const response = await apiClient.delete(`/api/admin/listings/${id}`, {
         headers: basicAuthHeader(credentials.username, credentials.password)
       });
+      
+      console.log('✅ Eliminazione API completata:', response.status);
+      return response.data;
     } catch (error) {
-      console.error(`Errore nell'eliminazione dell'immobile ${id}:`, error);
+      console.error(`❌ Errore nell'eliminazione dell'immobile ${id}:`, error);
+      console.error('❌ Error response status:', error.response?.status);
+      console.error('❌ Error response data:', error.response?.data);
+      
       throw new Error(
         error.response?.data?.message || 
+        error.response?.statusText ||
         'Errore nell\'eliminazione dell\'immobile'
       );
     }
@@ -331,8 +349,52 @@ export const listingService = {
     console.log('📸 listingService - uploadPhotos (AXIOS):', { listingId, filesCount: files?.length });
     
     try {
+      // Comprimi le immagini prima dell'upload
+      console.log('🔧 Compressione immagini in corso...');
+      const compressedFiles = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        console.log(`📸 Compressione file ${i + 1}/${files.length}: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+        
+        // Comprimi tutte le immagini per assicurarsi che siano sotto la soglia del server
+        if (file.type.startsWith('image/')) {
+          // Usa compressione più aggressiva se il file è molto grande
+          const quality = file.size > 2000000 ? 0.5 : 0.6; // 50% se > 2MB, altrimenti 60%
+          const maxWidth = file.size > 5000000 ? 600 : 800; // 600px se > 5MB, altrimenti 800px
+          
+          const compressed = await compressImage(file, maxWidth, quality);
+          console.log(`✅ Compresso: ${file.name} da ${(file.size / 1024 / 1024).toFixed(2)} MB a ${(compressed.size / 1024 / 1024).toFixed(2)} MB`);
+          compressedFiles.push(compressed);
+        } else {
+          compressedFiles.push(file);
+        }
+      }
+      
+      // Verifica finale delle dimensioni e conta totale
+      const finalFiles = [];
+      let totalSize = 0;
+      
+      for (const f of compressedFiles) {
+        if (f.size > 2000000) { // 2MB max per file
+          console.warn(`⚠️ File ${f.name} ancora troppo grande: ${(f.size / 1024 / 1024).toFixed(2)} MB`);
+          // Prova una compressione ancora più aggressiva
+          if (f.type.startsWith('image/')) {
+            const superCompressed = await compressImage(f, 500, 0.4);
+            console.log(`🔧 Super-compresso: ${f.name} a ${(superCompressed.size / 1024 / 1024).toFixed(2)} MB`);
+            finalFiles.push(superCompressed);
+            totalSize += superCompressed.size;
+          }
+        } else {
+          finalFiles.push(f);
+          totalSize += f.size;
+        }
+      }
+      
+      console.log(`📊 Dimensione totale upload: ${(totalSize / 1024 / 1024).toFixed(2)} MB per ${finalFiles.length} file`);
+      
       const fd = new FormData();
-      for (const f of files) {
+      for (const f of finalFiles) {
         fd.append('photos', f); // backend aspetta campo 'photos'
       }
       

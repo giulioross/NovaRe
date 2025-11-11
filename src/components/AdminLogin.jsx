@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Componente per il login amministratore
  * @param {Function} onLogin - Callback che riceve (username, password)
  */
 const AdminLogin = ({ onLogin }) => {
+  const navigate = useNavigate();
   const [credentials, setCredentials] = useState({
     username: '',
     password: ''
@@ -68,6 +70,34 @@ const AdminLogin = ({ onLogin }) => {
         <p style={{ color: '#666', fontSize: '0.9rem' }}>
           Inserisci le tue credenziali per accedere al pannello di controllo
         </p>
+        
+        {/* Bottone Torna alla Home */}
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          style={{
+            background: 'transparent',
+            border: '1px solid #007bff',
+            color: '#007bff',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            marginBottom: '20px',
+            width: '100%'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = '#007bff';
+            e.target.style.color = 'white';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'transparent';
+            e.target.style.color = '#007bff';
+          }}
+        >
+          ← Torna alla Home
+        </button>
       </div>
 
       {/* Form di login */}

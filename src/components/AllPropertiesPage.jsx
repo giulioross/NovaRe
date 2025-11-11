@@ -351,7 +351,7 @@ const AllPropertiesPage = () => {
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#333' }}>
                 Fascia di prezzo
               </label>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <input
                   type="number"
                   placeholder="Min"
@@ -359,13 +359,16 @@ const AllPropertiesPage = () => {
                   onChange={(e) => setFilters({...filters, prezzoMin: parseInt(e.target.value) || 0})}
                   style={{
                     flex: 1,
-                    padding: '12px',
+                    minWidth: '80px',
+                    maxWidth: '120px',
+                    padding: '10px 8px',
                     border: '2px solid #e1e5e9',
-                    borderRadius: '8px',
-                    fontSize: '1rem'
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    boxSizing: 'border-box'
                   }}
                 />
-                <span>-</span>
+                <span style={{ fontSize: '0.9rem', color: '#666', flexShrink: 0 }}>-</span>
                 <input
                   type="number"
                   placeholder="Max"
@@ -373,10 +376,13 @@ const AllPropertiesPage = () => {
                   onChange={(e) => setFilters({...filters, prezzoMax: parseInt(e.target.value) || 2000000})}
                   style={{
                     flex: 1,
-                    padding: '12px',
+                    minWidth: '80px',
+                    maxWidth: '120px',
+                    padding: '10px 8px',
                     border: '2px solid #e1e5e9',
-                    borderRadius: '8px',
-                    fontSize: '1rem'
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>

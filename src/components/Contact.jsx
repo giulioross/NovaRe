@@ -10,6 +10,7 @@ const Contact = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [currentOfficeSlide, setCurrentOfficeSlide] = useState(0);
   const officesRef = useRef([]);
 
   const API_BASE = 'http://localhost:8081/api';
@@ -100,6 +101,15 @@ const Contact = () => {
     window.open(mapsUrl, '_blank');
   };
 
+  // Funzioni per il carousel delle sedi
+  const nextOfficeSlide = () => {
+    setCurrentOfficeSlide((prev) => (prev + 1) % offices.length);
+  };
+  
+  const prevOfficeSlide = () => {
+    setCurrentOfficeSlide((prev) => (prev - 1 + offices.length) % offices.length);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -150,13 +160,14 @@ const Contact = () => {
   return (
     <section className="section contact" id="contatti" style={{backgroundImage: 'url("https://plus.unsplash.com/premium_photo-1661962277645-d490f3f3a941?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHhzZWFyY2h8ODF8fHJvbWElMjBpbGx1bWluYXRhJTIwZ2lvcm5vfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600")'}}>
       <div className="container">
-        <h2 className="section-title">Contatti</h2>
-        <p className="section-subtitle">
+        <h2 className="section-title" style={{textAlign: 'center'}}>Contatti</h2>
+        <p className="section-subtitle" style={{textAlign: 'center'}}>
           Se desideri vendere, acquistare o affittare un immobile a Roma, 
           Nova RE è il partner ideale per accompagnarti in questo percorso.
         </p>
         
-        <div className="offices-grid">
+        {/* Desktop: 3 sedi in riga */}
+        <div className="offices-grid offices-grid-desktop">
           {offices.map((office, index) => (
             <div 
               key={index}
@@ -175,26 +186,50 @@ const Contact = () => {
                 <div>📞 {office.phone}</div>
                 <div>🕒 {office.hours}</div>
               </div>
-              <div style={{
-                textAlign: 'center',
-                marginTop: '10px',
-                color: '#007bff',
-                fontSize: '0.9rem',
-                fontWeight: '600'
-              }}>
-                🗺️ Clicca per vedere sulla mappa
-              </div>
-              <div style={{
-                textAlign: 'center',
-                marginTop: '5px',
-                color: '#007bff',
-                fontSize: '0.9rem',
-                fontWeight: '500'
-              }}>
-                🗺️ Clicca per vedere sulla mappa
-              </div>
+
             </div>
           ))}
+        </div>
+
+        {/* Mobile: Carousel Sedi */}
+        <div className="offices-carousel-mobile">
+          <div className="carousel-container" style={{
+            transform: `translateX(-${currentOfficeSlide * 300}px)`
+          }}>
+            {offices.map((office, index) => (
+              <div key={index} className="carousel-card office-card">
+                <div className="office-image">
+                  <img src={office.image} alt={office.name} />
+                </div>
+                <h3 className="office-name">{office.name}</h3>
+                <div className="office-info">
+                  <div>📍 {office.address}</div>
+                  <div>📞 {office.phone}</div>
+                  <div>🕒 {office.hours}</div>
+                </div>
+
+              </div>
+            ))}
+          </div>
+          
+          {/* Navigation arrows */}
+          <button className="carousel-arrows prev" onClick={prevOfficeSlide}>
+            ‹
+          </button>
+          <button className="carousel-arrows next" onClick={nextOfficeSlide}>
+            ›
+          </button>
+          
+          {/* Dots navigation */}
+          <div className="carousel-navigation">
+            {offices.map((_, index) => (
+              <button
+                key={index}
+                className={`nav-dot ${index === currentOfficeSlide ? 'active' : ''}`}
+                onClick={() => setCurrentOfficeSlide(index)}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Form di Contatto */}

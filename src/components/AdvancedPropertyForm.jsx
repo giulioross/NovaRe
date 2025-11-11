@@ -13,6 +13,7 @@ import {
   validateProperty
 } from '../models/PropertyModel';
 import ImageUploader from './ImageUploader';
+import '../styles/AdvancedPropertyForm.css';
 
 // Componente FormField stabilizzato (fuori dal render del componente principale)
 const FormField = React.memo(({ 
@@ -30,6 +31,9 @@ const FormField = React.memo(({
   error,
   onChange
 }) => {
+  // Assicurati che il valore non sia mai null o undefined
+  const safeValue = value === null || value === undefined ? '' : value;
+  
   const handleChange = React.useCallback((e) => {
     if (!onChange || typeof onChange !== 'function') {
       console.warn(`FormField '${path}': onChange non è una funzione valida`);
@@ -61,7 +65,7 @@ const FormField = React.memo(({
       
       {options ? (
         <select
-          value={value}
+          value={safeValue}
           onChange={handleChange}
           style={{
             width: '100%',
@@ -78,7 +82,7 @@ const FormField = React.memo(({
         </select>
       ) : multiline ? (
         <textarea
-          value={value}
+          value={safeValue}
           onChange={handleChange}
           placeholder={placeholder}
           rows={4}
@@ -94,7 +98,7 @@ const FormField = React.memo(({
       ) : (
         <input
           type={type}
-          value={value}
+          value={safeValue}
           onChange={handleChange}
           placeholder={placeholder}
           min={min}
@@ -177,7 +181,7 @@ const AdvancedPropertyForm = ({
       },
       metadata: {
         ...PROPERTY_SCHEMA.metadata,
-        published: false
+        published: true // Pubblica automaticamente gli immobili creati dall'admin
       }
     };
   });
@@ -220,7 +224,7 @@ const AdvancedPropertyForm = ({
     let current = formData;
     
     for (const key of keys) {
-      if (current?.[key] === undefined) {
+      if (current?.[key] === undefined || current?.[key] === null) {
         // Per array fields, ritorna array vuoto invece di stringa vuota
         if (path.includes('finishings') || path.includes('exposure') || path.includes('plants_conformity') || path.includes('hoa_fees_includes')) {
           return [];
@@ -228,6 +232,15 @@ const AdvancedPropertyForm = ({
         return '';
       }
       current = current[key];
+    }
+    
+    // Assicurati che non sia mai null o undefined
+    if (current === null || current === undefined) {
+      // Per array fields, ritorna array vuoto
+      if (path.includes('finishings') || path.includes('exposure') || path.includes('plants_conformity') || path.includes('hoa_fees_includes')) {
+        return [];
+      }
+      return '';
     }
     
     return current;
@@ -289,7 +302,11 @@ const AdvancedPropertyForm = ({
               )}
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div className="form-grid-2" style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+              gap: '20px' 
+            }}>
               <FormField
                 label="Tipo Contratto"
                 path="contract"
@@ -311,7 +328,11 @@ const AdvancedPropertyForm = ({
               />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div className="form-grid-2" style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '20px' 
+            }}>
               <FormField
                 label="Prezzo (€)"
                 path="financials.price"
@@ -335,7 +356,11 @@ const AdvancedPropertyForm = ({
               />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+            <div className="form-grid-3" style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+              gap: '15px' 
+            }}>
               <FormField
                 label="Locali Totali"
                 path="size.rooms_total"
@@ -363,6 +388,9 @@ const AdvancedPropertyForm = ({
                 type="number"
                 required={true}
                 min={1}
+                value={getNestedValue('size.bathrooms')}
+                error={errors['size.bathrooms']}
+                onChange={handleFieldChange}
               />
             </div>
             
@@ -397,13 +425,23 @@ const AdvancedPropertyForm = ({
               path="address.street"
               required={true}
               placeholder="Via/Piazza e numero civico"
+              value={getNestedValue('address.street')}
+              error={errors['address.street']}
+              onChange={handleFieldChange}
             />
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+              gap: '20px' 
+            }}>
               <FormField
                 label="Quartiere/Zona"
                 path="address.district"
                 placeholder="es. Prati, Trastevere, Centro Storico"
+                value={getNestedValue('address.district')}
+                error={errors['address.district']}
+                onChange={handleFieldChange}
               />
               
               <FormField
@@ -411,26 +449,42 @@ const AdvancedPropertyForm = ({
                 path="address.city"
                 required={true}
                 placeholder="es. Roma"
+                value={getNestedValue('address.city')}
+                error={errors['address.city']}
+                onChange={handleFieldChange}
               />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', 
+              gap: '15px' 
+            }}>
               <FormField
                 label="Provincia"
                 path="address.province"
                 placeholder="es. RM"
+                value={getNestedValue('address.province')}
+                error={errors['address.province']}
+                onChange={handleFieldChange}
               />
               
               <FormField
                 label="Regione"
                 path="address.region"
                 placeholder="es. Lazio"
+                value={getNestedValue('address.region')}
+                error={errors['address.region']}
+                onChange={handleFieldChange}
               />
               
               <FormField
                 label="CAP"
                 path="address.postal_code"
                 placeholder="es. 00192"
+                value={getNestedValue('address.postal_code')}
+                error={errors['address.postal_code']}
+                onChange={handleFieldChange}
               />
             </div>
             
@@ -457,7 +511,11 @@ const AdvancedPropertyForm = ({
           <div>
             <h3>📏 Caratteristiche Immobile</h3>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '20px' 
+            }}>
               <FormField
                 label="Piano"
                 path="floor.level"
@@ -473,7 +531,11 @@ const AdvancedPropertyForm = ({
               />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+              gap: '15px' 
+            }}>
               <FormField
                 label="Ultimo piano"
                 path="floor.top_floor"
@@ -510,7 +572,11 @@ const AdvancedPropertyForm = ({
               max={new Date().getFullYear()}
             />
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '20px' 
+            }}>
               <FormField
                 label="Superficie calpestabile (mq)"
                 path="size.walkable_sqm"
@@ -531,7 +597,11 @@ const AdvancedPropertyForm = ({
               />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
+              gap: '15px' 
+            }}>
               <FormField
                 label="Balconi (n.)"
                 path="features.external.balconies"
@@ -563,7 +633,11 @@ const AdvancedPropertyForm = ({
               />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
+              gap: '15px' 
+            }}>
               <FormField
                 label="Box auto (n.)"
                 path="features.parking.box"
@@ -598,7 +672,11 @@ const AdvancedPropertyForm = ({
           <div>
             <h3>✨ Finiture e Comfort</h3>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '20px' 
+            }}>
               <FormField
                 label="Tipo Cucina"
                 path="features.kitchen"
@@ -633,7 +711,11 @@ const AdvancedPropertyForm = ({
               marginBottom: '20px'
             }}>
               <h4>Finiture (seleziona tutte quelle presenti)</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+                gap: '10px' 
+              }}>
                 {[
                   { key: 'parquet', label: 'Parquet' },
                   { key: 'marmo', label: 'Marmo' },
@@ -668,7 +750,11 @@ const AdvancedPropertyForm = ({
               marginBottom: '20px'
             }}>
               <h4>Esposizione (seleziona tutte quelle presenti)</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px' }}>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', 
+                gap: '10px' 
+              }}>
                 {Object.entries(EXPOSURE_LABELS).map(([key, label]) => (
                   <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <input
@@ -689,7 +775,11 @@ const AdvancedPropertyForm = ({
               </div>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '20px' 
+            }}>
               <FormField
                 label="Smart Home / Domotica"
                 path="features.smart_home"
@@ -716,7 +806,11 @@ const AdvancedPropertyForm = ({
           <div>
             <h3>⚡ Energia e Impianti</h3>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '20px' 
+            }}>
               <FormField
                 label="Classe Energetica"
                 path="energy.ape_class"
@@ -739,7 +833,11 @@ const AdvancedPropertyForm = ({
               />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '20px' 
+            }}>
               <FormField
                 label="Tipo riscaldamento"
                 path="energy.heating.type"
@@ -766,7 +864,11 @@ const AdvancedPropertyForm = ({
               />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '20px' 
+            }}>
               <FormField
                 label="Tipo raffrescamento"
                 path="energy.cooling.type"
@@ -807,7 +909,11 @@ const AdvancedPropertyForm = ({
               borderRadius: '8px'
             }}>
               <h4>Cosa includono le spese condominiali?</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+                gap: '10px' 
+              }}>
                 {[
                   { key: 'pulizia_scale', label: 'Pulizia scale' },
                   { key: 'ascensore', label: 'Ascensore' },
@@ -900,7 +1006,11 @@ const AdvancedPropertyForm = ({
           <div>
             <h3>📞 Contatti e Pubblicazione</h3>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+              gap: '20px' 
+            }}>
               <FormField
                 label="Nome Agenzia"
                 path="agent.agency_name"
@@ -921,7 +1031,11 @@ const AdvancedPropertyForm = ({
               />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '20px' 
+            }}>
               <FormField
                 label="Telefono"
                 path="agent.phone"
@@ -988,11 +1102,18 @@ const AdvancedPropertyForm = ({
             
             <h4>📋 Pubblicazione</h4>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '20px' 
+            }}>
               <FormField
                 label="Pubblica immediatamente"
                 path="metadata.published"
                 type="checkbox"
+                value={getNestedValue('metadata.published')}
+                error={errors['metadata.published']}
+                onChange={handleFieldChange}
               />
               
               <FormField
@@ -1055,13 +1176,14 @@ const AdvancedPropertyForm = ({
   };
 
   return (
-    <div key="advanced-property-form" style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+    <div key="advanced-property-form" className="advanced-property-form">
       {/* Progress bar */}
       <div style={{ marginBottom: '30px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <div className="progress-steps">
           {STEPS.map(step => (
             <div
               key={step.id}
+              className="progress-step"
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -1071,7 +1193,7 @@ const AdvancedPropertyForm = ({
               }}
               onClick={() => setCurrentStep(step.id)}
             >
-              <div style={{
+              <div className="progress-step-circle" style={{
                 width: '40px',
                 height: '40px',
                 borderRadius: '50%',
@@ -1085,7 +1207,7 @@ const AdvancedPropertyForm = ({
               }}>
                 {step.icon}
               </div>
-              <small style={{ textAlign: 'center', fontSize: '0.8rem' }}>
+              <small className="progress-step-title" style={{ textAlign: 'center', fontSize: '0.8rem' }}>
                 {step.title}
               </small>
             </div>
@@ -1109,25 +1231,16 @@ const AdvancedPropertyForm = ({
       </div>
 
       {/* Form step corrente */}
-      <div key={`form-step-${currentStep}`} style={{ 
-        background: 'white', 
-        padding: '30px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-        minHeight: '500px'
-      }}>
+      <div key={`form-step-${currentStep}`} className="form-step-container">
         {renderCurrentStep()}
       </div>
 
       {/* Navigation buttons */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        marginTop: '30px' 
-      }}>
+      <div className="navigation-buttons">
         <button
           onClick={prevStep}
           disabled={currentStep === 1}
+          className="nav-button"
           style={{
             padding: '12px 24px',
             background: currentStep === 1 ? '#ddd' : '#6c757d',
@@ -1142,6 +1255,7 @@ const AdvancedPropertyForm = ({
 
         <button
           onClick={onCancel}
+          className="nav-button cancel"
           style={{
             padding: '12px 24px',
             background: 'transparent',
@@ -1158,6 +1272,7 @@ const AdvancedPropertyForm = ({
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
+            className="nav-button primary"
             style={{
               padding: '12px 24px',
               background: 'var(--color-primary)',
@@ -1167,11 +1282,12 @@ const AdvancedPropertyForm = ({
               cursor: isSubmitting ? 'not-allowed' : 'pointer'
             }}
           >
-            {isSubmitting ? 'Salvando...' : (isEditing ? 'Aggiorna' : 'Crea Annuncio')}
+            {isSubmitting ? 'Pubblicando...' : (isEditing ? 'Aggiorna Annuncio' : 'Pubblica Annuncio')}
           </button>
         ) : (
           <button
             onClick={nextStep}
+            className="nav-button primary"
             style={{
               padding: '12px 24px',
               background: 'var(--color-primary)',

@@ -30,7 +30,7 @@ body{margin:0;color:var(--text);font-family:Inter, system-ui, -apple-system, Seg
 
 
 /* GENERIC SECTIONS */
-section{padding:72px 0}
+section{padding:72px 0;margin:0}
 .section--dark{background:var(--bg);color:var(--text-invert)}
 .section--accent{background:linear-gradient(180deg,#f3f7ff, #ffffff)}
 .section--muted{background:#fafbfd}
@@ -64,4 +64,185 @@ section{padding:72px 0}
 /* NUMERI (4 CARD IN RIGA) */
 .numbers{position:relative}
 .numbers-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+
+
+/* TEAM */
+.team{margin:0 !important}
+.team .container{margin:0 auto}
+.team .team{margin:0}
+.team-grid{margin:0 auto}
+.section-title{margin-top:0 !important}
+
+/* HOVER EFFECTS FOR ALL CARDS */
+.stat-card{
+  transition: all 0.3s ease !important;
+  cursor: pointer;
+}
+
+.stat-card:hover{
+  transform: translateY(-8px) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important;
+  background-color: #f0f9ff !important;
+}
+
+.team-card{
+  transition: all 0.3s ease !important;
+  cursor: pointer;
+  background-color: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.team-card:hover{
+  transform: translateY(-8px) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3) !important;
+  background-color: #f0f9ff !important;
+}
+
+.partner-card{
+  transition: all 0.3s ease !important;
+  cursor: pointer;
+}
+
+.partner-card:hover{
+  transform: translateY(-8px) scale(1.05) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important;
+  background-color: #f0f9ff !important;
+}
+
+.value-card:hover{
+  transform: translateY(-8px) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
+  background-color: #f0f9ff !important;
+}
+
+/* CTA SECTION */
+.cta-section{
+  background-color: rgb(43, 57, 101) !important;
+  margin: 0 !important;
+}
+
+
 .submit-btn:hover{background:var(--primary-600)}
+
+/* Responsive Team & Partners Carousel */
+.team-grid-desktop, .partners-grid-desktop {
+  display: grid !important;
+}
+
+.team-carousel-mobile, .partners-carousel-mobile {
+  display: none !important;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .team-grid-desktop, .partners-grid-desktop {
+    display: none !important;
+  }
+  
+  .team-carousel-mobile, .partners-carousel-mobile {
+    display: block !important;
+    position: relative;
+    max-width: 100%;
+    overflow: hidden;
+    padding: 0 1rem;
+  }
+  
+  .carousel-container {
+    display: flex;
+    transition: transform 0.3s ease;
+    gap: 1rem;
+  }
+  
+  .carousel-card {
+    flex: 0 0 280px;
+    background-color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .carousel-navigation {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+  }
+  
+  .nav-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .nav-dot.active {
+    background-color: white;
+  }
+  
+  .carousel-arrows {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: rgb(43, 57, 101);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+  }
+  
+  .carousel-arrows:hover {
+    background-color: white;
+  }
+  
+  .carousel-arrows.prev {
+    left: 0.5rem;
+  }
+  
+  .carousel-arrows.next {
+    right: 0.5rem;
+  }
+  
+  /* Partners responsive on mobile - mantenuto per altri componenti */
+  .partners-grid:not(.partners-grid-desktop) {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+  
+  /* Mission & Vision responsive on mobile */
+  .values-grid-responsive {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+  
+  .office-carousel-container {
+    margin-top: 2rem !important;
+  }
+}
+
+/* Tablet responsive adjustments */
+@media (max-width: 960px) {
+  .partners-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  
+  /* Mission & Vision on tablet */
+  .values-grid-responsive {
+    grid-template-columns: 1fr !important;
+  }
+}

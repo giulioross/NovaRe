@@ -1744,3 +1744,136 @@ body {
     height: 18px;
   }
 }
+
+/* Team, Services & Offices Carousel for HomePage */
+.team-grid-desktop, .services-grid-desktop, .offices-grid-desktop {
+  display: grid !important;
+}
+
+.team-carousel-mobile, .services-carousel-mobile, .offices-carousel-mobile {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .team-grid-desktop, .services-grid-desktop, .offices-grid-desktop {
+    display: none !important;
+  }
+  
+  .team-carousel-mobile, .services-carousel-mobile, .offices-carousel-mobile {
+    display: block !important;
+    position: relative;
+    max-width: 100%;
+    overflow: hidden;
+    padding: 0 1rem;
+  }
+  
+  .carousel-container {
+    display: flex;
+    transition: transform 0.3s ease;
+    gap: 1rem;
+  }
+  
+  .carousel-card {
+    flex: 0 0 280px;
+    min-height: 300px;
+  }
+  
+  /* Servizi carousel specifici */
+  .services-carousel-mobile .carousel-card {
+    flex: 0 0 290px;
+    min-height: 450px;
+    margin-right: 1rem;
+  }
+  
+  /* Sedi/Uffici carousel specifici */
+  .offices-carousel-mobile .carousel-card {
+    flex: 0 0 280px;
+    min-height: 350px;
+    margin-right: 1rem;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: #333 !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .offices-carousel-mobile .carousel-card .office-name {
+    color: #1f2937 !important;
+    font-weight: 700;
+  }
+  
+  .offices-carousel-mobile .carousel-card .office-info {
+    color: #4b5563 !important;
+  }
+  
+  .offices-carousel-mobile .carousel-card .office-info div {
+    color: #374151 !important;
+  }
+  
+  /* Office images carousel responsive */
+  .office-carousel-container {
+    padding: 0 1rem;
+  }
+  
+  .office-images-carousel {
+    height: 300px !important;
+  }
+  
+  /* Stats grid responsive */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.5rem !important;
+  }
+  
+  .carousel-navigation {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+  }
+  
+  .nav-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .nav-dot.active {
+    background-color: white;
+  }
+  
+  .carousel-arrows {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--nova-blue);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+    z-index: 10;
+  }
+  
+  .carousel-arrows:hover {
+    background-color: white;
+  }
+  
+  .carousel-arrows.prev {
+    left: 0.5rem;
+  }
+  
+  .carousel-arrows.next {
+    right: 0.5rem;
+  }
+}

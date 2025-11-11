@@ -210,6 +210,34 @@ const CompanyLogin = ({ onLogin = null, error, onShowRegister }) => {
           }}>
             Admin Professionale
           </p>
+          
+          {/* Bottone Torna alla Home */}
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--color-primary)',
+              color: 'var(--color-primary)',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              marginTop: '15px',
+              width: '100%'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = 'var(--color-primary)';
+              e.target.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'transparent';
+              e.target.style.color = 'var(--color-primary)';
+            }}
+          >
+            ← Torna alla Home
+          </button>
         </div>
 
         <form onSubmit={handleSubmit}>

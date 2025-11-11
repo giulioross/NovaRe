@@ -145,12 +145,29 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
     );
   }
 
-  // Prepara le immagini (placeholder se non presenti)
-  const images = listing.images && listing.images.length > 0 
-    ? listing.images 
-    : listing.imageUrl 
-      ? [listing.imageUrl]
-      : [];
+
+
+  // Prepara le immagini (controlla tutti i possibili campi)
+  const images = [];
+  
+  // Controlla diversi possibili campi per le immagini
+  if (listing.images && Array.isArray(listing.images) && listing.images.length > 0) {
+    images.push(...listing.images);
+  }
+  if (listing.photoUrls && Array.isArray(listing.photoUrls) && listing.photoUrls.length > 0) {
+    images.push(...listing.photoUrls);
+  }
+  if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
+    images.push(...listing.photos);
+  }
+  if (listing.imageUrl && !images.includes(listing.imageUrl)) {
+    images.push(listing.imageUrl);
+  }
+  if (listing.immaginePrincipale && !images.includes(listing.immaginePrincipale)) {
+    images.push(listing.immaginePrincipale);
+  }
+
+
 
   // Formatta il prezzo usando l'utility
   const displayPrice = formatPrice(listing.price, listing.contractType);
@@ -171,7 +188,7 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' }}>
       {/* Hero Section con breadcrumb */}
       <div style={{
         background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
@@ -231,15 +248,33 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
       </div>
 
       {/* Contenuto principale */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
+      <div style={{ 
+        maxWidth: '1200px', 
+        margin: '0 auto', 
+        padding: '40px 20px',
+        position: 'relative',
+        zIndex: 1
+      }}>
         
-        {/* Layout principale - 2 colonne */}
+        {/* Layout principale - 2 colonne responsive */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: '2fr 1fr', 
-          gap: '40px',
+          gridTemplateColumns: '1fr',
+          gap: '20px',
           alignItems: 'start'
-        }}>
+        }}
+        className="listing-detail-layout"
+        >
+          <style>
+            {`
+              @media (min-width: 769px) {
+                .listing-detail-layout {
+                  grid-template-columns: 2fr 1fr !important;
+                  gap: 40px !important;
+                }
+              }
+            `}
+          </style>
           
           {/* Colonna sinistra - Immagini e Descrizione */}
           <div>
@@ -441,6 +476,241 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                   Nessuna descrizione disponibile per questo immobile.
                 </p>
               )}
+            </div>
+
+            {/* Sezione Dettagli Completi */}
+            <div style={{
+              background: 'white',
+              borderRadius: '15px',
+              padding: '30px',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+              marginTop: '20px'
+            }}>
+              <h2 style={{ 
+                color: 'var(--color-primary)', 
+                marginBottom: '30px', 
+                fontSize: '1.8rem',
+                fontWeight: '700'
+              }}>
+                📋 Dettagli Completi
+              </h2>
+              
+              {/* Grid di dettagli */}
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                gap: '20px'
+              }}
+              className="details-grid"
+              >
+                <style>
+                  {`
+                    @media (max-width: 768px) {
+                      .details-grid {
+                        grid-template-columns: 1fr !important;
+                        gap: 15px !important;
+                      }
+                    }
+                  `}
+                </style>
+                
+                {/* Informazioni Generali */}
+                <div style={{
+                  background: '#f8f9fa',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  border: '1px solid #e9ecef'
+                }}>
+                  <h3 style={{ 
+                    color: 'var(--color-primary)', 
+                    marginBottom: '15px', 
+                    fontSize: '1.2rem',
+                    fontWeight: '600'
+                  }}>
+                    🏠 Informazioni Generali
+                  </h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {listing.property_type && (
+                      <div><strong>Tipologia:</strong> {listing.property_type}</div>
+                    )}
+                    {listing.contract_type && (
+                      <div><strong>Contratto:</strong> {listing.contract_type}</div>
+                    )}
+                    {listing.condition && (
+                      <div><strong>Condizioni:</strong> {listing.condition}</div>
+                    )}
+                    {listing.commercial_sqm && (
+                      <div><strong>Superficie commerciale:</strong> {listing.commercial_sqm} m²</div>
+                    )}
+                    {listing.rooms_total && (
+                      <div><strong>Vani totali:</strong> {listing.rooms_total}</div>
+                    )}
+                    {listing.floor_level !== undefined && listing.floor_level !== null && (
+                      <div><strong>Piano:</strong> {listing.floor_level}</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Caratteristiche Energetiche */}
+                <div style={{
+                  background: '#e8f5e8',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  border: '1px solid #c8e6c9'
+                }}>
+                  <h3 style={{ 
+                    color: '#2e7d32', 
+                    marginBottom: '15px', 
+                    fontSize: '1.2rem',
+                    fontWeight: '600'
+                  }}>
+                    ⚡ Efficienza Energetica
+                  </h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {listing.energy_class && (
+                      <div><strong>Classe energetica:</strong> <span style={{
+                        background: '#4caf50',
+                        color: 'white',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontWeight: 'bold'
+                      }}>{listing.energy_class}</span></div>
+                    )}
+                    {listing.heating_type && (
+                      <div><strong>Tipo riscaldamento:</strong> {listing.heating_type}</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Informazioni Finanziarie */}
+                <div style={{
+                  background: '#fff3e0',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  border: '1px solid #ffcc02'
+                }}>
+                  <h3 style={{ 
+                    color: '#ef6c00', 
+                    marginBottom: '15px', 
+                    fontSize: '1.2rem',
+                    fontWeight: '600'
+                  }}>
+                    💰 Informazioni Finanziarie
+                  </h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div><strong>Prezzo:</strong> {displayPrice}</div>
+                    {listing.hoa_fees && listing.hoa_fees > 0 && (
+                      <div><strong>Spese condominiali:</strong> €{listing.hoa_fees}/mese</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Caratteristiche Aggiuntive */}
+                {(listing.features && typeof listing.features === 'string') && (
+                  <div style={{
+                    background: '#f3e5f5',
+                    padding: '20px',
+                    borderRadius: '12px',
+                    border: '1px solid #ce93d8'
+                  }}>
+                    <h3 style={{ 
+                      color: '#7b1fa2', 
+                      marginBottom: '15px', 
+                      fontSize: '1.2rem',
+                      fontWeight: '600'
+                    }}>
+                      ✨ Caratteristiche
+                    </h3>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {(() => {
+                        try {
+                          const features = JSON.parse(listing.features);
+                          return Object.entries(features).map(([key, value]) => 
+                            value && (
+                              <div key={key}>
+                                <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {value}
+                              </div>
+                            )
+                          );
+                        } catch (e) {
+                          return <div>{listing.features}</div>;
+                        }
+                      })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* Informazioni Edificio */}
+                {(listing.building_info && typeof listing.building_info === 'string') && (
+                  <div style={{
+                    background: '#e3f2fd',
+                    padding: '20px',
+                    borderRadius: '12px',
+                    border: '1px solid #90caf9'
+                  }}>
+                    <h3 style={{ 
+                      color: '#1565c0', 
+                      marginBottom: '15px', 
+                      fontSize: '1.2rem',
+                      fontWeight: '600'
+                    }}>
+                      🏢 Informazioni Edificio
+                    </h3>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {(() => {
+                        try {
+                          const buildingInfo = JSON.parse(listing.building_info);
+                          return Object.entries(buildingInfo).map(([key, value]) => 
+                            value && (
+                              <div key={key}>
+                                <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {value}
+                              </div>
+                            )
+                          );
+                        } catch (e) {
+                          return <div>{listing.building_info}</div>;
+                        }
+                      })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* Agente/Agenzia */}
+                {(listing.agent_name || listing.agent_phone || listing.agent_email) && (
+                  <div style={{
+                    background: '#fafafa',
+                    padding: '20px',
+                    borderRadius: '12px',
+                    border: '1px solid #e0e0e0'
+                  }}>
+                    <h3 style={{ 
+                      color: '#424242', 
+                      marginBottom: '15px', 
+                      fontSize: '1.2rem',
+                      fontWeight: '600'
+                    }}>
+                      👤 Contatti Agente
+                    </h3>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {listing.agent_name && (
+                        <div><strong>Nome:</strong> {listing.agent_name}</div>
+                      )}
+                      {listing.agent_phone && (
+                        <div><strong>Telefono:</strong> <a href={`tel:${listing.agent_phone}`} style={{color: 'var(--color-primary)'}}>{listing.agent_phone}</a></div>
+                      )}
+                      {listing.agent_email && (
+                        <div><strong>Email:</strong> <a href={`mailto:${listing.agent_email}`} style={{color: 'var(--color-primary)'}}>{listing.agent_email}</a></div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

@@ -99,16 +99,52 @@ const Navbar = () => {
               )}
             </li>
             <li>
-              <Link to="/immobili" onClick={() => setMobileMenuOpen(false)}>Immobili</Link>
+              <Link 
+                to="/immobili" 
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setShowUserMenu(false);
+                }}
+              >
+                Immobili
+              </Link>
             </li>
             <li>
-              <a href="#chi-siamo" onClick={(e) => { e.preventDefault(); scrollToSection('chi-siamo'); }}>Chi siamo</a>
+              <Link 
+                to="/about" 
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setShowUserMenu(false);
+                }}
+              >
+                Chi siamo
+              </Link>
             </li>
             <li>
-              <a href="#servizi" onClick={(e) => { e.preventDefault(); scrollToSection('servizi'); }}>Servizi</a>
+              {isHomePage ? (
+                <a href="#servizi" onClick={(e) => { e.preventDefault(); scrollToSection('servizi'); }}>Servizi</a>
+              ) : (
+                <a href="/#servizi" onClick={(e) => { e.preventDefault(); window.location.href = '/#servizi'; setMobileMenuOpen(false); }}>Servizi</a>
+              )}
             </li>
             <li>
-              <a href="#contatti" onClick={(e) => { e.preventDefault(); scrollToSection('contatti'); }}>Contatti</a>
+              {isHomePage ? (
+                <a href="#contatti" onClick={(e) => { e.preventDefault(); scrollToSection('contatti'); }}>Contatti</a>
+              ) : (
+                <a href="/#contatti" onClick={(e) => { e.preventDefault(); window.location.href = '/#contatti'; setMobileMenuOpen(false); }}>Contatti</a>
+              )}
+            </li>
+            <li>
+              <a 
+                href="https://www.novareimmobiliare.it/brochure.pdf" 
+                download="Nova_RE_Brochure.pdf"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setShowUserMenu(false);
+                }}
+              >
+                Brochure
+              </a>
             </li>
           </ul>
           
