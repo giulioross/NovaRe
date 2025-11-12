@@ -20,8 +20,14 @@ export const useListings = () => {
     setError(null);
     
     try {
-      const data = await listingService.getPublicListings();
-      console.log('📥 useListings - Dati ricevuti dal backend:', data);
+      // DEBUG: Carica TUTTI gli immobili (pubblici e privati) per il debug
+      const isDebugMode = true; // Cambia a false per tornare ai soli pubblici
+      
+      const data = isDebugMode ? 
+        await listingService.getAllListingsAdmin() : 
+        await listingService.getPublicListings();
+        
+      console.log('📥 useListings - Dati ricevuti dal backend (modalità debug):', data);
       
       if (data && Array.isArray(data)) {
         console.log(`✅ useListings - Caricati ${data.length} immobili pubblici`);

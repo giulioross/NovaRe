@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdvancedPropertyForm from './AdvancedPropertyForm';
-import AuthManager from './AuthManager';
-import { useCompanyAuth } from './CompanyLogin';
+import { useAuthPersistent } from '../hooks/useAuthPersistent';
 import { listingService } from '../services/listingService';
 import { mapPropertyDataToBackend } from '../utils/payloadMapper';
 
@@ -11,7 +10,7 @@ import { mapPropertyDataToBackend } from '../utils/payloadMapper';
  */
 const AdvancedAdminPanel = ({ onBack }) => {
   const navigate = useNavigate();
-  const { isAuthenticated, user, loading, login, logout, hasPermission } = useCompanyAuth();
+  const { isAuthenticated, user, loading, logout, hasPermission } = useAuthPersistent();
   
   // Gestione manuale dei listing admin
   const [listings, setListings] = useState([]);
@@ -22,7 +21,6 @@ const AdvancedAdminPanel = ({ onBack }) => {
   const [selectedListing, setSelectedListing] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [loginError, setLoginError] = useState('');
 
   // Funzione per tornare alla home
   const handleGoHome = () => {
@@ -61,15 +59,7 @@ const AdvancedAdminPanel = ({ onBack }) => {
     }
   }, [isAuthenticated]);
 
-  // Gestisce il login
-  const handleLogin = async (username, password, companyCode) => {
-    setLoginError('');
-    const result = await login(username, password, companyCode);
-    
-    if (!result.success) {
-      setLoginError(result.error);
-    }
-  };
+
 
   // Gestisce la creazione di un nuovo annuncio
   const handleCreateListing = async (propertyData) => {
@@ -352,9 +342,10 @@ const AdvancedAdminPanel = ({ onBack }) => {
     );
   }
 
-  // Se non autenticato, mostra login/registrazione
+  // Se non autenticato, reindirizza al login
   if (!isAuthenticated) {
-    return <AuthManager onLogin={handleLogin} loginError={loginError} />;
+    navigate('/admin');
+    return null;
   }
 
   // Render del contenuto basato sulla vista corrente

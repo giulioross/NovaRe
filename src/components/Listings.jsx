@@ -234,6 +234,7 @@ const Listings = () => {
               
               <Link
                 to={`/listing/${listing.id}`}
+                state={{ from: '/' }}
                 style={{
                   display: 'block',
                   textAlign: 'center',

@@ -37,7 +37,9 @@ const HomePage = () => {
   }, []);
 
   const handleViewDetails = (listingId) => {
-    navigate(`/listing/${listingId}`);
+    navigate(`/listing/${listingId}`, { 
+      state: { from: '/' } 
+    });
   };
 
   // Se è attiva la demo, mostra la demo page

@@ -109,6 +109,7 @@ const Properties = () => {
                   </div>
                   <Link 
                     to={`/listing/${listing.id}`}
+                    state={{ from: '/' }}
                     style={{
                       display: 'inline-block',
                       background: 'linear-gradient(45deg, #007bff, #0056b3)',
@@ -203,6 +204,7 @@ const Properties = () => {
                           <div style={{ textAlign: 'center' }}>
                             <Link 
                               to={`/listing/${listing.id}`}
+                              state={{ from: '/' }}
                               style={{
                                 display: 'inline-block',
                                 background: 'linear-gradient(45deg, #007bff, #0056b3)',
@@ -290,12 +292,16 @@ const Properties = () => {
                       key={index}
                       onClick={() => setCurrentPropertySlide(index)}
                       style={{
-                        width: '10px',
-                        height: '10px',
+                        width: '12px',
+                        height: '12px',
+                        minWidth: '12px',
+                        minHeight: '12px',
                         borderRadius: '50%',
                         border: 'none',
                         background: index === currentPropertySlide ? '#007bff' : 'rgba(255,255,255,0.5)',
                         cursor: 'pointer',
+                        aspectRatio: '1',
+                        flexShrink: 0,
                         transition: 'background 0.3s ease'
                       }}
                     />

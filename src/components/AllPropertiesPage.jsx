@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import LoadingSpinner from './LoadingSpinner';
 import { useListings } from '../hooks/useListings';
 import PlaceholderImage from './PlaceholderImage';
@@ -7,13 +7,24 @@ import { API_BASE } from '../services/listingService.js';
 
 const AllPropertiesPage = () => {
   const { listings: properties, loading, error, refetch } = useListings();
+  const navigate = useNavigate();
+  
+  // Debug: controlla quanti immobili vengono caricati
+  useEffect(() => {
+    console.log('🏠 AllPropertiesPage - Immobili caricati:', properties.length);
+    console.log('🏠 Lista completa immobili:', properties);
+    if (properties.length > 0) {
+      console.log('🏠 STRUTTURA PRIMO IMMOBILE:', properties[0]);
+      console.log('🏠 Campi disponibili:', Object.keys(properties[0]));
+    }
+  }, [properties]);
   
   // Filtri state
   const [filters, setFilters] = useState({
     quartiere: 'all',
     tipo: 'all',
     prezzoMin: 0,
-    prezzoMax: 2000000,
+    prezzoMax: 999999999, // Prezzo massimo molto alto per non escludere nulla
     localiMin: '',
     localiMax: '',
     bagniMin: '',
@@ -33,6 +44,58 @@ const AllPropertiesPage = () => {
 
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
+  // Ottieni quartieri unici dagli immobili disponibili
+  const getUniqueQuartieri = () => {
+    const quartieri = new Set();
+    properties.forEach(property => {
+      if (property.address) {
+        // Estrai il quartiere dall'indirizzo (assumiamo che sia la prima parte)
+        const parts = property.address.split(',');
+        if (parts.length > 0) {
+          quartieri.add(parts[0].trim());
+        }
+      }
+      if (property.district) {
+        quartieri.add(property.district);
+      }
+      if (property.city) {
+        quartieri.add(property.city);
+      }
+      if (property.zone) {
+        quartieri.add(property.zone);
+      }
+    });
+    return Array.from(quartieri).filter(q => q && q.length > 0).sort();
+  };
+
+  // Ottieni tipi unici dagli immobili disponibili
+  const getUniqueTypes = () => {
+    const types = new Set();
+    properties.forEach(property => {
+      if (property.propertyType) {
+        types.add(property.propertyType);
+      }
+      if (property.type) {
+        types.add(property.type);
+      }
+      if (property.category) {
+        types.add(property.category);
+      }
+    });
+    return Array.from(types).filter(t => t && t.length > 0).sort();
+  };
+
+  // Ottieni classi energetiche realmente disponibili
+  const getUniqueEnergyClasses = () => {
+    const classes = new Set();
+    properties.forEach(property => {
+      if (property.energy?.ape_class) {
+        classes.add(property.energy.ape_class);
+      }
+    });
+    return Array.from(classes).sort();
+  };
+
   // Helper per costruire URL assolute delle immagini
   const imgUrlFrom = (photo) => {
     if (!photo) return '';
@@ -41,25 +104,189 @@ const AllPropertiesPage = () => {
   };
 
   // Filtra le proprietà in base ai filtri selezionati
-  const filteredProperties = properties.filter(property => {
+  const filteredProperties = properties.filter((property, index) => {
+    console.log(`🔍 ===== FILTRAGGIO IMMOBILE [${index}] =====`);
+    console.log('🔍 Titolo:', property.title || 'Senza titolo');
+    console.log('🔍 ID:', property.id);
+    console.log('🔍 Filtri attivi:', filters);
+    
     // Filtro quartiere
-    if (filters.quartiere !== 'all' && !property.address?.toLowerCase().includes(filters.quartiere.toLowerCase())) {
-      return false;
+    if (filters.quartiere !== 'all' && filters.quartiere.trim() !== '') {
+      const quartiere = filters.quartiere.toLowerCase().trim();
+      
+      console.log('🔍 DEBUG FILTRO QUARTIERE per:', property.title);
+      console.log('🔍 Cercando:', quartiere);
+      console.log('🔍 TUTTI I CAMPI DISPONIBILI:', Object.keys(property));
+      console.log('🔍 address:', property.address);
+      console.log('🔍 district:', property.district);
+      console.log('🔍 city:', property.city);
+      console.log('🔍 zone:', property.zone);
+      console.log('🔍 indirizzo:', property.indirizzo);
+      console.log('🔍 quartiere_prop:', property.quartiere);
+      console.log('🔍 zona:', property.zona);
+      console.log('🔍 citta:', property.citta);
+      
+      const inAddress = property.address?.toLowerCase().includes(quartiere);
+      const inDistrict = property.district?.toLowerCase().includes(quartiere);
+      const inCity = property.city?.toLowerCase().includes(quartiere);
+      const inZone = property.zone?.toLowerCase().includes(quartiere);
+      
+      // Controlli aggiuntivi per campi italiani
+      const inIndirizzo = property.indirizzo?.toLowerCase().includes(quartiere);
+      const inQuartiere = property.quartiere?.toLowerCase().includes(quartiere);
+      const inZona = property.zona?.toLowerCase().includes(quartiere);
+      const inCitta = property.citta?.toLowerCase().includes(quartiere);
+      
+      console.log('🔍 Match results EN - inAddress:', inAddress, 'inDistrict:', inDistrict, 'inCity:', inCity, 'inZone:', inZone);
+      console.log('🔍 Match results IT - inIndirizzo:', inIndirizzo, 'inQuartiere:', inQuartiere, 'inZona:', inZona, 'inCitta:', inCitta);
+      
+      // Cerca anche corrispondenze parziali nei nomi dei quartieri famosi
+      const matchesFamousDistrict = ['centro', 'trastevere', 'prati', 'testaccio', 'san lorenzo', 
+        'monti', 'campo de fiori', 'aventino', 'celio', 'esquilino', 'flaminio', 
+        'parioli', 'eur', 'ostiense', 'garbatella', 'san giovanni', 're di roma', 
+        'ponte milvio', 'trieste', 'nomentano'].some(famous => 
+          famous.includes(quartiere) || quartiere.includes(famous)
+        );
+      
+      console.log('🔍 Famous district match:', matchesFamousDistrict);
+      
+      const shouldInclude = inAddress || inDistrict || inCity || inZone || 
+                          inIndirizzo || inQuartiere || inZona || inCitta || 
+                          matchesFamousDistrict;
+      console.log('🔍 Final decision - shouldInclude:', shouldInclude);
+      
+      if (!shouldInclude) {
+        console.log('❌ Immobile escluso per quartiere:', property.title, 'Cercato:', quartiere);
+        return false;
+      } else {
+        console.log('✅ Immobile incluso per quartiere:', property.title);
+      }
     }
     
     // Filtro tipo
-    if (filters.tipo !== 'all' && property.contractType?.toLowerCase() !== filters.tipo) {
-      return false;
+    if (filters.tipo !== 'all') {
+      const tipo = filters.tipo.toLowerCase();
+      const matchPropertyType = property.propertyType?.toLowerCase() === tipo;
+      const matchType = property.type?.toLowerCase() === tipo;
+      const matchCategory = property.category?.toLowerCase() === tipo;
+      
+      if (!matchPropertyType && !matchType && !matchCategory) {
+        console.log('❌ Immobile escluso per tipo:', property.title, 'Tipo immobile:', property.propertyType, 'Cercato:', tipo);
+        return false;
+      }
     }
     
     // Filtro prezzo
     const price = parseFloat(property.price) || 0;
-    if (price < filters.prezzoMin || price > filters.prezzoMax) {
+    if (filters.prezzoMin > 0 && price < filters.prezzoMin) {
+      console.log('❌ Immobile escluso per prezzo minimo:', property.title, 'Prezzo:', price, 'Minimo:', filters.prezzoMin);
+      return false;
+    }
+    if (filters.prezzoMax < 999999999 && price > filters.prezzoMax) {
+      console.log('❌ Immobile escluso per prezzo massimo:', property.title, 'Prezzo:', price, 'Massimo:', filters.prezzoMax);
+      return false;
+    }
+    
+    // Filtro locali
+    const locali = parseInt(property.rooms) || parseInt(property.bedrooms) || 0;
+    if (filters.localiMin && locali < parseInt(filters.localiMin)) {
+      console.log('❌ Immobile escluso per locali minimi:', property.title, 'Locali:', locali, 'Minimo:', filters.localiMin);
+      return false;
+    }
+    if (filters.localiMax && locali > parseInt(filters.localiMax)) {
+      console.log('❌ Immobile escluso per locali massimi:', property.title, 'Locali:', locali, 'Massimo:', filters.localiMax);
+      return false;
+    }
+    
+    // Filtro bagni
+    const bagni = parseInt(property.bathrooms) || 0;
+    if (filters.bagniMin && bagni < parseInt(filters.bagniMin)) {
+      return false;
+    }
+    if (filters.bagniMax && bagni > parseInt(filters.bagniMax)) {
+      return false;
+    }
+    
+    // Filtro superficie
+    const superficie = parseFloat(property.size) || parseFloat(property.surface) || parseFloat(property.sqm) || parseFloat(property.commercial_sqm) || 0;
+    if (filters.superficieMin && superficie < parseFloat(filters.superficieMin)) {
+      console.log('❌ Immobile escluso per superficie minima:', property.title, 'Superficie:', superficie, 'Minimo:', filters.superficieMin);
+      return false;
+    }
+    if (filters.superficieMax && superficie > parseFloat(filters.superficieMax)) {
+      console.log('❌ Immobile escluso per superficie massima:', property.title, 'Superficie:', superficie, 'Massimo:', filters.superficieMax);
+      return false;
+    }
+    
+    // Filtro classe energetica
+    if (filters.classeEnergetica !== 'all' && property.energy?.ape_class !== filters.classeEnergetica) {
+      return false;
+    }
+    
+    // Filtro caratteristiche
+    if (filters.caratteristiche.ascensore && 
+        !property.features?.elevator && 
+        !property.elevator && 
+        !property.lift &&
+        property.elevator !== true) {
+      console.log('❌ Immobile escluso per mancanza ascensore:', property.title);
+      return false;
+    }
+    if (filters.caratteristiche.balcone && 
+        !property.features?.balcony && 
+        !property.balcony &&
+        property.balcony !== true) {
+      console.log('❌ Immobile escluso per mancanza balcone:', property.title);
+      return false;
+    }
+    if (filters.caratteristiche.giardino && 
+        !property.features?.garden && 
+        !property.garden &&
+        property.garden !== true) {
+      console.log('❌ Immobile escluso per mancanza giardino:', property.title);
+      return false;
+    }
+    if (filters.caratteristiche.garage && 
+        !property.features?.garage && 
+        !property.garage &&
+        property.garage !== true) {
+      console.log('❌ Immobile escluso per mancanza garage:', property.title);
+      return false;
+    }
+    if (filters.caratteristiche.postoAuto && 
+        !property.features?.parking && 
+        !property.parking &&
+        property.parking !== true) {
+      console.log('❌ Immobile escluso per mancanza posto auto:', property.title);
+      return false;
+    }
+    if (filters.caratteristiche.arredato && 
+        property.furnished !== 'arredato' && 
+        property.furnished !== true &&
+        !property.furnished) {
+      console.log('❌ Immobile escluso per arredamento:', property.title, 'Furnished:', property.furnished);
       return false;
     }
     
     return true;
   });
+
+  // Debug: controlla quanti immobili passano i filtri
+  useEffect(() => {
+    console.log('🔍 Immobili dopo filtri:', filteredProperties.length);
+    console.log('🔍 Filtri applicati:', filters);
+    console.log('🔍 Immobili filtrati:', filteredProperties);
+    
+    // Debug: mostra perché gli immobili vengono esclusi
+    if (properties.length > 0 && filteredProperties.length < properties.length) {
+      console.log('❌ Immobili esclusi dai filtri:');
+      properties.forEach((property, index) => {
+        if (!filteredProperties.includes(property)) {
+          console.log(`❌ [${index}] ${property.title || 'Senza titolo'}`);
+        }
+      });
+    }
+  }, [filteredProperties, filters, properties]);
 
   // Reset filtri avanzati
   const resetAdvancedFilters = () => {
@@ -83,8 +310,34 @@ const AllPropertiesPage = () => {
     });
   };
 
+  // Funzione per resettare tutti i filtri
+  const handleResetFilters = () => {
+    setFilters({
+      tipo: 'all',
+      quartiere: 'all',
+      prezzoMin: 0,
+      prezzoMax: 999999999,
+      localiMin: '',
+      localiMax: '',
+      bagniMin: '',
+      bagniMax: '',
+      superficieMin: '',
+      superficieMax: '',
+      classeEnergetica: 'all',
+      caratteristiche: {
+        ascensore: false,
+        balcone: false,
+        giardino: false,
+        garage: false,
+        postoAuto: false,
+        arredato: false
+      }
+    });
+    console.log('🔄 Filtri resettati');
+  };
+
   // Componente per singola proprietà
-  const PropertyCard = ({ property }) => {
+  const PropertyCard = ({ property, navigate }) => {
     const mainPhoto = property.photoUrls && property.photoUrls.length > 0 ? property.photoUrls[0] : null;
     
     return (
@@ -205,7 +458,9 @@ const AllPropertiesPage = () => {
                   fontWeight: '600',
                   transition: 'all 0.3s'
                 }}
-                onClick={() => window.open(`/listing/${property.id}`, '_blank')}
+                onClick={() => navigate(`/listing/${property.id}`, { 
+                  state: { from: '/immobili' } 
+                })}
               >
                 Dettagli
               </button>
@@ -303,9 +558,12 @@ const AllPropertiesPage = () => {
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#333' }}>
                 Quartiere
               </label>
-              <select
-                value={filters.quartiere}
-                onChange={(e) => setFilters({...filters, quartiere: e.target.value})}
+              <input
+                type="text"
+                list="quartieri-list"
+                placeholder="Cerca quartiere o seleziona..."
+                value={filters.quartiere === 'all' ? '' : filters.quartiere}
+                onChange={(e) => setFilters({...filters, quartiere: e.target.value || 'all'})}
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -315,13 +573,35 @@ const AllPropertiesPage = () => {
                   position: 'relative',
                   zIndex: 10
                 }}
-              >
+              />
+              <datalist id="quartieri-list">
                 <option value="all">Tutti i quartieri</option>
-                <option value="centro">Centro</option>
-                <option value="trastevere">Trastevere</option>
-                <option value="prati">Prati</option>
-                <option value="testaccio">Testaccio</option>
-              </select>
+                {/* Quartieri più gettonati di Roma */}
+                <option value="Centro">Centro Storico</option>
+                <option value="Trastevere">Trastevere</option>
+                <option value="Prati">Prati</option>
+                <option value="Testaccio">Testaccio</option>
+                <option value="San Lorenzo">San Lorenzo</option>
+                <option value="Monti">Monti</option>
+                <option value="Campo de' Fiori">Campo de' Fiori</option>
+                <option value="Aventino">Aventino</option>
+                <option value="Celio">Celio</option>
+                <option value="Esquilino">Esquilino</option>
+                <option value="Flaminio">Flaminio</option>
+                <option value="Parioli">Parioli</option>
+                <option value="EUR">EUR</option>
+                <option value="Ostiense">Ostiense</option>
+                <option value="Garbatella">Garbatella</option>
+                <option value="San Giovanni">San Giovanni</option>
+                <option value="Re di Roma">Re di Roma</option>
+                <option value="Ponte Milvio">Ponte Milvio</option>
+                <option value="Trieste">Trieste</option>
+                <option value="Nomentano">Nomentano</option>
+                {/* Quartieri dai dati reali */}
+                {getUniqueQuartieri().map(quartiere => (
+                  <option key={quartiere} value={quartiere}>{quartiere}</option>
+                ))}
+              </datalist>
             </div>
 
             <div style={{ position: 'relative', zIndex: 5 }}>
@@ -342,8 +622,9 @@ const AllPropertiesPage = () => {
                 }}
               >
                 <option value="all">Tutti i tipi</option>
-                <option value="vendita">Vendita</option>
-                <option value="affitto">Affitto</option>
+                {getUniqueTypes().map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
               </select>
             </div>
 
@@ -372,8 +653,8 @@ const AllPropertiesPage = () => {
                 <input
                   type="number"
                   placeholder="Max"
-                  value={filters.prezzoMax}
-                  onChange={(e) => setFilters({...filters, prezzoMax: parseInt(e.target.value) || 2000000})}
+                  value={filters.prezzoMax === 999999999 ? '' : filters.prezzoMax}
+                  onChange={(e) => setFilters({...filters, prezzoMax: parseInt(e.target.value) || 999999999})}
                   style={{
                     flex: 1,
                     minWidth: '80px',
@@ -550,13 +831,9 @@ const AllPropertiesPage = () => {
                     }}
                   >
                     <option value="all">Tutte</option>
-                    <option value="A">A</option>
-                    <option value="B">B</option>
-                    <option value="C">C</option>
-                    <option value="D">D</option>
-                    <option value="E">E</option>
-                    <option value="F">F</option>
-                    <option value="G">G</option>
+                    {getUniqueEnergyClasses().map(classe => (
+                      <option key={classe} value={classe}>Classe {classe}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -598,22 +875,43 @@ const AllPropertiesPage = () => {
                 </div>
               </div>
 
-              <button
-                onClick={resetAdvancedFilters}
-                style={{
-                  marginTop: '20px',
-                  background: 'var(--color-error)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '10px 20px',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  fontWeight: '600'
-                }}
-              >
-                Resetta filtri avanzati
-              </button>
+              <div style={{ display: 'flex', gap: '15px', marginTop: '20px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => {
+                    // I filtri si applicano automaticamente, questo pulsante può essere usato per refresh
+                    console.log('Applicando filtri...', filters);
+                  }}
+                  style={{
+                    background: 'var(--nova-blue)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    transition: 'background 0.3s'
+                  }}
+                >
+                  🔍 Cerca Immobili
+                </button>
+                
+                <button
+                  onClick={resetAdvancedFilters}
+                  style={{
+                    background: 'var(--color-error)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '10px 20px',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  Resetta filtri avanzati
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -622,7 +920,84 @@ const AllPropertiesPage = () => {
         <div style={{ marginBottom: '30px', textAlign: 'center' }}>
           <h2 style={{ color: '#333', fontSize: '1.5rem' }}>
             {filteredProperties.length} immobili trovati
+            {properties.length > 0 && filteredProperties.length < properties.length && (
+              <span style={{ fontSize: '1rem', color: '#666', fontWeight: 'normal' }}>
+                {' '}su {properties.length} totali
+              </span>
+            )}
           </h2>
+          
+          {/* Mostra filtri attivi */}
+          {(filters.quartiere !== 'all' || filters.tipo !== 'all' || filters.prezzoMin > 0 || filters.prezzoMax < 999999999) && (
+            <div style={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: '8px', 
+              justifyContent: 'center',
+              marginTop: '15px'
+            }}>
+              {filters.quartiere !== 'all' && filters.quartiere.trim() && (
+                <span style={{
+                  background: 'var(--nova-blue)',
+                  color: 'white',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontSize: '0.85rem',
+                  fontWeight: '500'
+                }}>
+                  📍 {filters.quartiere}
+                </span>
+              )}
+              {filters.tipo !== 'all' && (
+                <span style={{
+                  background: 'var(--color-secondary)',
+                  color: 'white',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontSize: '0.85rem',
+                  fontWeight: '500'
+                }}>
+                  🏠 {filters.tipo}
+                </span>
+              )}
+              {(filters.prezzoMin > 0 || filters.prezzoMax < 999999999) && (
+                <span style={{
+                  background: 'var(--color-accent)',
+                  color: 'white',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontSize: '0.85rem',
+                  fontWeight: '500'
+                }}>
+                  💰 {filters.prezzoMin > 0 ? `€${filters.prezzoMin.toLocaleString()}` : '€0'} - {filters.prezzoMax < 999999999 ? `€${filters.prezzoMax.toLocaleString()}` : '∞'}
+                </span>
+              )}
+              <button
+                onClick={handleResetFilters}
+                style={{
+                  background: '#f8f9fa',
+                  color: '#666',
+                  border: '1px solid #ddd',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontSize: '0.85rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.background = '#e9ecef';
+                  e.target.style.color = '#333';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = '#f8f9fa';
+                  e.target.style.color = '#666';
+                }}
+              >
+                🔄 Reset filtri
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Loading */}
@@ -675,7 +1050,7 @@ const AllPropertiesPage = () => {
             gap: '30px'
           }}>
             {filteredProperties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
+              <PropertyCard key={property.id} property={property} navigate={navigate} />
             ))}
           </div>
         )}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuthPersistent } from '../hooks/useAuthPersistent';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -9,9 +10,8 @@ const Navbar = () => {
   const navigate = useNavigate();
   const isHomePage = location.pathname === '/';
 
-  // Controlla se l'utente è autenticato
-  const isAuthenticated = localStorage.getItem('companyAuth') === 'true';
-  const userInfo = JSON.parse(localStorage.getItem('companyUserInfo') || '{}');
+  // Usa il nuovo hook di autenticazione unificato
+  const { isAuthenticated, user, logout } = useAuthPersistent();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,9 +47,8 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('companyAuth');
-    localStorage.removeItem('companyUserInfo');
-    localStorage.removeItem('registeredUsers');
+    console.log('🚪 Logout dalla navbar');
+    logout(); // Usa il nuovo sistema unificato
     setShowUserMenu(false);
     navigate('/');
   };
@@ -78,6 +77,7 @@ const Navbar = () => {
             />
           </Link>
         </div>
+        
         {/* Menu Hamburger per Mobile */}
         <button 
           className="mobile-menu-toggle"
@@ -160,8 +160,9 @@ const Navbar = () => {
               {showUserMenu && isAuthenticated && (
                 <div className="user-dropdown">
                   <div className="user-info">
-                    <div className="user-name">{userInfo.username || 'Utente'}</div>
-                    <div className="user-email">{userInfo.email || ''}</div>
+                    <div className="user-name">{user?.fullName || user?.username || 'Utente'}</div>
+                    <div className="user-email">{user?.email || ''}</div>
+                    {user?.role && <div className="user-role">{user.role}</div>}
                   </div>
                   <hr />
                   <button className="dropdown-item" onClick={() => navigate('/dashboard')}>

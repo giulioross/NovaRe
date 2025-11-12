@@ -3,7 +3,10 @@ import { useListing } from '../hooks/useListings.js';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import PlaceholderImage from './PlaceholderImage.jsx';
 import { formatPrice, formatAddress } from '../utils/listingMapper.js';
+import { API_BASE } from '../services/listingService.js';
 import Navbar from './Navbar.jsx';
+import PropertyMap from './PropertyMap.jsx';
+import 'leaflet/dist/leaflet.css';
 
 /**
  * Pagina dettaglio annuncio completa
@@ -192,7 +195,12 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
   
   console.log('📸 IMMAGINI FINALI trovate:', images);
 
-
+  // Helper per costruire URL assolute delle immagini
+  const imgUrlFrom = (photo) => {
+    if (!photo) return '';
+    return (photo.startsWith('http://') || photo.startsWith('https://')) ? 
+      photo : `${API_BASE}${photo}`;
+  };
 
   // Formatta il prezzo usando l'utility
   const displayPrice = formatPrice(listing.price, listing.contractType);
@@ -315,7 +323,7 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
               {images.length > 0 ? (
                 <div style={{ position: 'relative', borderRadius: '15px', overflow: 'hidden', marginBottom: '20px' }}>
                   <img
-                    src={images[currentImageIndex]}
+                    src={imgUrlFrom(images[currentImageIndex])}
                     alt={listing.title}
                     style={{
                       width: '100%',
@@ -324,6 +332,10 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                       cursor: 'pointer'
                     }}
                     onClick={() => openImageModal(currentImageIndex)}
+                    onError={(e) => {
+                      console.error('❌ Errore caricamento immagine:', images[currentImageIndex]);
+                      e.target.style.display = 'none';
+                    }}
                   />
                   
                   {/* Badge tipo contratto */}
@@ -434,7 +446,7 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                       }}
                     >
                       <img
-                        src={image}
+                        src={imgUrlFrom(image)}
                         alt={`Vista ${index + 1}`}
                         style={{
                           width: '100%',
@@ -691,9 +703,28 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                       </div>
                     )}
                   </div>
+                  
+                  {/* Mappa */}
+                  <div style={{ marginTop: '25px' }}>
+                    <h4 style={{ 
+                      color: '#1976d2', 
+                      marginBottom: '15px', 
+                      fontSize: '1.2rem',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      🗺️ Posizione sulla mappa
+                    </h4>
+                    <PropertyMap listing={listing} height={400} />
+                  </div>
                 </div>
 
                 {/* Efficienza Energetica */}
+                {(listing.energy?.ape_class || listing.energy?.ipe_kwh_m2y || 
+                  listing.energy?.heating?.type || listing.energy?.heating?.generator ||
+                  listing.energy?.cooling?.type || listing.energy?.cooling?.zones) && (
                 <div style={{
                   background: '#e8f5e8',
                   padding: '25px',
@@ -708,24 +739,8 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                     borderBottom: '3px solid #2e7d32',
                     paddingBottom: '10px'
                   }}>
-                    EFFICIENZA ENERGETICA E IMPIANTI
-                  </h3>
-                  
-                  {/* Debug: mostra sempre se ci sono dati energetici */}
-                  {process.env.NODE_ENV === 'development' && (
-                    <div style={{ background: 'yellow', padding: '10px', marginBottom: '10px', fontSize: '12px' }}>
-                      <strong>DEBUG Efficienza Energetica:</strong><br/>
-                      energy object: {JSON.stringify(listing.energy)}<br/>
-                      ape_class: {listing.energy?.ape_class || 'null'}<br/>
-                      ipe_kwh_m2y: {listing.energy?.ipe_kwh_m2y || 'null'}<br/>
-                      heating_type: {listing.energy?.heating_type || 'null'}<br/>
-                      cooling_type: {listing.energy?.cooling_type || 'null'}<br/>
-                      heating_generator: {listing.energy?.heating_generator || 'null'}<br/>
-                      cooling_zones: {listing.energy?.cooling_zones || 'null'}
-                    </div>
-                  )}
-                  
-                  <div style={{ 
+                  EFFICIENZA ENERGETICA E IMPIANTI
+                  </h3>                  <div style={{ 
                     display: 'grid', 
                     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
                     gap: '12px' 
@@ -743,14 +758,14 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                         }}>{listing.energy.ape_class}</span>
                       </div>
                     )}
-                    {listing.energy?.heating_type && (
+                    {listing.energy?.heating?.type && (
                       <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
-                        <strong>Tipo riscaldamento:</strong> {listing.energy.heating_type}
+                        <strong>Tipo riscaldamento:</strong> {listing.energy.heating.type}
                       </div>
                     )}
-                    {listing.energy?.cooling_type && (
+                    {listing.energy?.cooling?.type && (
                       <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
-                        <strong>Raffrescamento:</strong> {listing.energy.cooling_type}
+                        <strong>Raffrescamento:</strong> {listing.energy.cooling.type}
                       </div>
                     )}
                     {listing.energy?.ipe_kwh_m2y && (
@@ -758,18 +773,19 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                         <strong>IPE:</strong> {listing.energy.ipe_kwh_m2y} kWh/m²anno
                       </div>
                     )}
-                    {listing.energy?.heating_generator && (
+                    {listing.energy?.heating?.generator && (
                       <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
-                        <strong>Generatore di calore:</strong> {listing.energy.heating_generator}
+                        <strong>Generatore di calore:</strong> {listing.energy.heating.generator}
                       </div>
                     )}
-                    {listing.energy?.cooling_zones && listing.energy.cooling_zones > 0 && (
+                    {listing.energy?.cooling?.zones && listing.energy.cooling.zones > 0 && (
                       <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
-                        <strong>Zone climatizzate:</strong> {listing.energy.cooling_zones}
+                        <strong>Zone climatizzate:</strong> {listing.energy.cooling.zones}
                       </div>
                     )}
                   </div>
                 </div>
+                )}
 
                 {/* Informazioni Finanziarie */}
                 <div style={{
@@ -1437,7 +1453,7 @@ Tel: +39 345 345 4186
         >
           <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}>
             <img
-              src={images[currentImageIndex]}
+              src={imgUrlFrom(images[currentImageIndex])}
               alt={listing.title}
               style={{
                 maxWidth: '100%',

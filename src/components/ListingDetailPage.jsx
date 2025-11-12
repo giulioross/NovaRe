@@ -1,5 +1,5 @@
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import ListingDetail from './ListingDetail';
 import Navbar from './Navbar';
 
@@ -11,15 +11,34 @@ import Navbar from './Navbar';
 const ListingDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [hasNavigationHistory, setHasNavigationHistory] = useState(false);
+
+  useEffect(() => {
+    // Controlla se c'è una storia di navigazione
+    console.log('📍 Location state:', location.state);
+    console.log('📍 Window history length:', window.history.length);
+    
+    // Se c'è uno state o la history ha più di una entry, probabilmente c'è una pagina precedente
+    setHasNavigationHistory(location.state?.from || window.history.length > 1);
+  }, [location]);
 
   const handleBack = () => {
     console.log('🔙 handleBack chiamato');
+    console.log('🔙 hasNavigationHistory:', hasNavigationHistory);
+    
     try {
-      navigate(-1); // Torna alla pagina precedente
+      if (hasNavigationHistory) {
+        console.log('🔙 Usando navigate(-1)');
+        navigate(-1);
+      } else {
+        console.log('🔙 Nessuna storia, vado alla lista immobili');
+        navigate('/immobili');
+      }
     } catch (error) {
       console.error('❌ Errore navigate:', error);
-      // Fallback: vai alla home
-      navigate('/');
+      // Fallback finale: vai alla lista immobili
+      navigate('/immobili');
     }
   };
 
