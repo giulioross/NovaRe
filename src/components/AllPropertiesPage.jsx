@@ -163,16 +163,48 @@ const AllPropertiesPage = () => {
       }
     }
     
-    // Filtro tipo
+    // Filtro tipo (affitto/vendita)
     if (filters.tipo !== 'all') {
       const tipo = filters.tipo.toLowerCase();
-      const matchPropertyType = property.propertyType?.toLowerCase() === tipo;
-      const matchType = property.type?.toLowerCase() === tipo;
-      const matchCategory = property.category?.toLowerCase() === tipo;
+      console.log('🔍 DEBUG FILTRO TIPO per:', property.title);
+      console.log('🔍 Cercando tipo:', tipo);
+      console.log('🔍 contractType:', property.contractType);
+      console.log('🔍 listingType:', property.listingType);
+      console.log('🔍 saleType:', property.saleType);
+      console.log('🔍 transactionType:', property.transactionType);
       
-      if (!matchPropertyType && !matchType && !matchCategory) {
-        console.log('❌ Immobile escluso per tipo:', property.title, 'Tipo immobile:', property.propertyType, 'Cercato:', tipo);
+      let matches = false;
+      
+      if (tipo === 'affitto') {
+        // Cerca indicatori di affitto
+        matches = property.contractType?.toLowerCase().includes('affitto') ||
+                  property.contractType?.toLowerCase().includes('rent') ||
+                  property.listingType?.toLowerCase().includes('affitto') ||
+                  property.listingType?.toLowerCase().includes('rent') ||
+                  property.saleType?.toLowerCase().includes('affitto') ||
+                  property.saleType?.toLowerCase().includes('rent') ||
+                  property.transactionType?.toLowerCase().includes('affitto') ||
+                  property.transactionType?.toLowerCase().includes('rent');
+      } else if (tipo === 'vendita') {
+        // Cerca indicatori di vendita
+        matches = property.contractType?.toLowerCase().includes('vendita') ||
+                  property.contractType?.toLowerCase().includes('sale') ||
+                  property.contractType?.toLowerCase().includes('sell') ||
+                  property.listingType?.toLowerCase().includes('vendita') ||
+                  property.listingType?.toLowerCase().includes('sale') ||
+                  property.saleType?.toLowerCase().includes('vendita') ||
+                  property.saleType?.toLowerCase().includes('sale') ||
+                  property.transactionType?.toLowerCase().includes('vendita') ||
+                  property.transactionType?.toLowerCase().includes('sale');
+      }
+      
+      console.log('🔍 Match result for tipo:', matches);
+      
+      if (!matches) {
+        console.log('❌ Immobile escluso per tipo:', property.title, 'Cercato:', tipo);
         return false;
+      } else {
+        console.log('✅ Immobile incluso per tipo:', property.title);
       }
     }
     
@@ -621,10 +653,9 @@ const AllPropertiesPage = () => {
                   zIndex: 10
                 }}
               >
-                <option value="all">Tutti i tipi</option>
-                {getUniqueTypes().map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
+                <option value="all">Tutti gli annunci</option>
+                <option value="affitto">Affitto</option>
+                <option value="vendita">Vendita</option>
               </select>
             </div>
 
