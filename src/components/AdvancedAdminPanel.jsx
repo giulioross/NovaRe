@@ -152,61 +152,85 @@ const AdvancedAdminPanel = ({ onBack }) => {
   };
 
   // Gestisce la modifica di un annuncio esistente
-  const handleUpdateListing = async (propertyData) => {
+  const handleUpdateListing = async (propertyData, updateOptions = {}) => {
     if (!selectedListing?.id) return;
     
     setIsSubmitting(true);
     
     try {
-      // Prepara i dati per l'aggiornamento usando il mapper
-      console.log('🔄 Mapping dei dati del form per l\'aggiornamento...');
-      const payload = mapPropertyDataToBackend(propertyData);
-      console.log('✅ Payload aggiornamento mappato:', payload);
-
-      // Converti le immagini in file se necessario
-      const imageFiles = propertyData.media.images?.length > 0 
-        ? propertyData.media.images.map((img, index) => {
-            // Se è già un file, usalo direttamente
-            if (img instanceof File) return img;
-            // Se è base64, convertilo in file
-            if (img.startsWith('data:')) {
-              const byteString = atob(img.split(',')[1]);
-              const mimeString = img.split(',')[0].split(':')[1].split(';')[0];
-              const ab = new ArrayBuffer(byteString.length);
-              const ia = new Uint8Array(ab);
-              for (let i = 0; i < byteString.length; i++) {
-                ia[i] = byteString.charCodeAt(i);
-              }
-              return new File([ab], `image-${index}.jpg`, { type: mimeString });
-            }
-            return null;
-          }).filter(Boolean)
-        : [];
-
-      console.log('🔄 Aggiornamento annuncio con dati:', payload);
-      console.log('� PAYLOAD COMPLETO UPDATE - NUMERO CAMPI:', Object.keys(payload).length);
-      console.log('�📸 Immagini da aggiornare:', imageFiles.length);
-
-      // Opzione A: Approccio separato (JSON prima, poi foto)
-      // Step 1: Aggiorna JSON
-      console.log('Step 1: Aggiornamento dati JSON...');
-      const jsonResult = await listingService.updateListingJsonOnly(
-        selectedListing.id,
-        payload,
-        'admin',
-        'ddd'
-      );
-
-      // Step 2: Carica foto se presenti
-      let result = jsonResult;
-      if (imageFiles.length > 0) {
-        console.log('Step 2: Upload foto...');
-        result = await listingService.uploadListingPhotosOnly(
+      let result;
+      
+      // Se abbiamo solo modifiche parziali, usa il nuovo sistema PATCH
+      if (updateOptions.isPartialUpdate && updateOptions.changesOnly) {
+        console.log('🔄 AGGIORNAMENTO PARZIALE - Solo campi modificati');
+        console.log('📝 Modifiche da applicare:', updateOptions.changesOnly);
+        console.log('📊 Numero campi modificati:', Object.keys(updateOptions.changesOnly).length);
+        
+        // Mappa le modifiche usando il payload mapper
+        const partialPayload = mapPropertyDataToBackend(updateOptions.changesOnly);
+        console.log('✅ Payload parziale mappato:', partialPayload);
+        
+        // Usa il nuovo metodo PATCH per aggiornamento parziale
+        result = await listingService.patchListing(
           selectedListing.id,
-          imageFiles,
+          partialPayload,
           'admin',
           'ddd'
         );
+        
+        console.log('✅ Aggiornamento parziale completato:', result);
+        
+      } else {
+        // Fallback al sistema completo
+        console.log('🔄 AGGIORNAMENTO COMPLETO - Mapping dei dati...');
+        const payload = mapPropertyDataToBackend(propertyData);
+        console.log('✅ Payload completo mappato:', payload);
+
+        // Converti le immagini in file se necessario
+        const imageFiles = propertyData.media.images?.length > 0 
+          ? propertyData.media.images.map((img, index) => {
+              // Se è già un file, usalo direttamente
+              if (img instanceof File) return img;
+              // Se è base64, convertilo in file
+              if (img.startsWith('data:')) {
+                const byteString = atob(img.split(',')[1]);
+                const mimeString = img.split(',')[0].split(':')[1].split(';')[0];
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) {
+                  ia[i] = byteString.charCodeAt(i);
+                }
+                return new File([ab], `image-${index}.jpg`, { type: mimeString });
+              }
+              return null;
+            }).filter(Boolean)
+          : [];
+
+        console.log('🔄 Aggiornamento annuncio con dati:', payload);
+        console.log('📊 PAYLOAD COMPLETO UPDATE - NUMERO CAMPI:', Object.keys(payload).length);
+        console.log('📸 Immagini da aggiornare:', imageFiles.length);
+
+        // Opzione A: Approccio separato (JSON prima, poi foto)
+        // Step 1: Aggiorna JSON
+        console.log('Step 1: Aggiornamento dati JSON...');
+        const jsonResult = await listingService.updateListingJsonOnly(
+          selectedListing.id,
+          payload,
+          'admin',
+          'ddd'
+        );
+
+        // Step 2: Carica foto se presenti
+        result = jsonResult;
+        if (imageFiles.length > 0) {
+          console.log('Step 2: Upload foto...');
+          result = await listingService.uploadListingPhotosOnly(
+            selectedListing.id,
+            imageFiles,
+            'admin',
+            'ddd'
+          );
+        }
       }
 
       console.log('✅ Annuncio aggiornato:', result);

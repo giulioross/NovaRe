@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   PROPERTY_TYPES,
   PROPERTY_TYPE_LABELS,
@@ -13,6 +13,7 @@ import {
   validateProperty
 } from '../models/PropertyModel';
 import ImageUploader from './ImageUploader';
+import { createUpdatePayload } from '../utils/changeTracker';
 import '../styles/AdvancedPropertyForm.css';
 
 // Componente FormField stabilizzato (fuori dal render del componente principale)
@@ -220,6 +221,18 @@ const AdvancedPropertyForm = ({
   const [currentStep, setCurrentStep] = useState(1); // Step del wizard
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Stato per tracking delle modifiche
+  const [originalData, setOriginalData] = useState(null);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Inizializza i dati originali quando initialData cambia (per modalità edit)
+  useEffect(() => {
+    if (isEditing && initialData) {
+      setOriginalData(JSON.parse(JSON.stringify(initialData)));
+      console.log('📋 Dati originali salvati per tracking modifiche:', initialData);
+    }
+  }, [isEditing, initialData]);
 
   // Steps del wizard
   const STEPS = [
@@ -245,9 +258,21 @@ const AdvancedPropertyForm = ({
       }
       
       current[keys[keys.length - 1]] = value;
+      
+      // Se siamo in modalità edit, controlla per modifiche
+      if (isEditing && originalData) {
+        const changes = createUpdatePayload(originalData, newData);
+        const hasChanged = Object.keys(changes).length > 0;
+        setHasChanges(hasChanged);
+        
+        if (hasChanged) {
+          console.log('📝 Modifiche rilevate:', changes);
+        }
+      }
+      
       return newData;
     });
-  }, []);
+  }, [isEditing, originalData]);
 
   // Helper per ottenere valore campo annidato (memorizzato per evitare re-render)
   const getNestedValue = useCallback((path) => {
@@ -1219,10 +1244,36 @@ const AdvancedPropertyForm = ({
       return;
     }
     
-    console.log('✅ Validazione superata, invio dati...');
+    console.log('✅ Validazione superata, preparazione invio...');
+    
     try {
-      await onSubmit(formData);
+      // Se siamo in modalità edit e abbiamo dati originali, invia solo le modifiche
+      if (isEditing && originalData && hasChanges) {
+        const changes = createUpdatePayload(originalData, formData);
+        console.log('📝 Modalità EDIT - Invio solo modifiche:', changes);
+        console.log('📊 Campi modificati:', Object.keys(changes).length);
+        
+        // Passa sia i dati completi che le modifiche al parent
+        await onSubmit(formData, { changesOnly: changes, isPartialUpdate: true });
+      } else if (isEditing && !hasChanges) {
+        console.log('ℹ️ Modalità EDIT - Nessuna modifica rilevata');
+        alert('Nessuna modifica da salvare');
+        setIsSubmitting(false);
+        return;
+      } else {
+        // Modalità creazione - invia tutti i dati
+        console.log('🆕 Modalità CREAZIONE - Invio dati completi');
+        await onSubmit(formData);
+      }
+      
       console.log('✅ onSubmit completato con successo!');
+      
+      // Reset del tracking dopo successo
+      if (isEditing && originalData) {
+        setOriginalData(JSON.parse(JSON.stringify(formData)));
+        setHasChanges(false);
+      }
+      
     } catch (error) {
       console.error('❌ Errore invio form:', error);
       alert('Errore durante la pubblicazione: ' + error.message);

@@ -111,6 +111,10 @@ export function mapPropertyDataToBackend(propertyData) {
     }),
     
     // Spese condominiali incluse
-    hoaFeesIncludes: JSON.stringify(propertyData.financials?.hoa_fees_includes)
+    hoaFeesIncludes: JSON.stringify(propertyData.financials?.hoa_fees_includes),
+    
+    // Timestamp (aggiungi sempre per tracking)
+    createdAt: propertyData.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 }

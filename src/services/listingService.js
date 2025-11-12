@@ -279,7 +279,55 @@ export const listingService = {
     }
   },
 
+  /**
+   * Aggiorna parzialmente un immobile (PATCH) - solo i campi modificati
+   * @param {string|number} id - ID dell'immobile
+   * @param {Object} changes - Solo i campi da aggiornare
+   * @param {string} username - Username admin (opzionale)
+   * @param {string} password - Password admin (opzionale)
+   * @returns {Promise<Object>} Immobile aggiornato
+   */
+  async patchListing(id, changes, username, password) {
+    try {
+      // Usa credenziali predefinite se non specificate
+      const credentials = username && password ? 
+        { username, password } : 
+        getActiveCredentials();
 
+      console.log('🔄 PATCH: Aggiornamento parziale immobile');
+      console.log('📝 Solo campi modificati:', changes);
+      console.log('📊 Numero campi da aggiornare:', Object.keys(changes).length);
+
+      // Per gli aggiornamenti parziali, non modificare createdAt ma sempre aggiornare updatedAt
+      const updatePayload = { ...changes };
+      delete updatePayload.createdAt; // Non modificare la data di creazione
+      updatePayload.updatedAt = new Date().toISOString(); // Sempre aggiorna timestamp modifica
+      
+      console.log('🕒 Payload con timestamp aggiornato:', updatePayload);
+
+      const response = await apiClient.patch(`/api/admin/listings/${id}`, updatePayload, {
+        headers: {
+          'Authorization': basicAuthHeader(credentials.username, credentials.password),
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('✅ Aggiornamento parziale completato:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`❌ Errore nell'aggiornamento parziale dell'immobile ${id}:`, error);
+      console.error('📋 Status:', error.response?.status);
+      console.error('📋 Response data:', error.response?.data);
+      
+      // Se il backend non supporta PATCH, fallback a PUT
+      if (error.response?.status === 405 || error.response?.status === 501) {
+        console.log('⚠️ PATCH non supportato, fallback a PUT completo');
+        return this.updateListing(id, changes, username, password);
+      }
+      
+      throw error;
+    }
+  },
 
   /**
    * Elimina un immobile (admin)

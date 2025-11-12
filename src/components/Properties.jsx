@@ -39,15 +39,7 @@ const Properties = () => {
         
         {/* Mostra alcuni immobili in evidenza se disponibili */}
         {!loading && featuredListings.length > 0 && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '20px',
-            margin: '40px 0',
-            maxWidth: '1000px',
-            marginLeft: 'auto',
-            marginRight: 'auto'
-          }}>
+          <div className="properties-grid">
             {featuredListings.map((listing) => {
               const firstImage = getFirstImage(listing);
 

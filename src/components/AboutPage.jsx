@@ -118,9 +118,9 @@ const AboutPage = () => {
       </section>
 
       {/* Mission & Vision con Carousel Uffici */}
-      <section className="values section--dark" style={{backgroundColor: 'rgb(43, 57, 101)', padding: '2.5rem 0'}}>
+      <section className="values section--dark" style={{backgroundColor: 'rgb(43, 57, 101)', padding: '1.5rem 0'}}>
         <div className="container">
-          <h2 className="section-title text-invert" style={{color: 'white', textAlign: 'center', marginBottom: '3rem'}}>I nostri valori</h2>
+          <h2 className="section-title text-invert" style={{color: 'white', textAlign: 'center', marginBottom: '2rem'}}>I nostri valori</h2>
           
           <div className="values-grid-responsive" style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', maxWidth: '1200px', margin: '0 auto', alignItems: 'center'}}>
             
