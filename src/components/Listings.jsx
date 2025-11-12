@@ -233,7 +233,7 @@ const Listings = () => {
               </div>
               
               <Link
-                to={`/immobili/${listing.id}`}
+                to={`/listing/${listing.id}`}
                 style={{
                   display: 'block',
                   textAlign: 'center',

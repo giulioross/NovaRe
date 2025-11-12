@@ -100,7 +100,7 @@ const About = () => {
   return (
     <section className="section about about-blue" id="chi-siamo">
       <div className="container">
-        <h2 className="section-title text-white" style={{textAlign: 'center'}}>Chi siamo</h2>
+        <h2 className="section-title text-white" style={{textAlign: 'center !important'}}>Chi siamo</h2>
         <p className="section-subtitle text-white" style={{textAlign: 'center'}}>
           Nova RE nasce dalla volontà di innovare il settore immobiliare, 
           integrando digitalizzazione, trasparenza, empatia ed esperienza.

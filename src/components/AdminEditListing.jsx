@@ -58,7 +58,7 @@ const AdminEditListing = ({ listing, username, password, onSuccess, onCancel }) 
           const imgUrlFrom = (photo) => {
             if (!photo) return '';
             return (photo.startsWith('http://') || photo.startsWith('https://')) ? 
-              photo : `${import.meta.env.VITE_API_BASE || 'http://localhost:8081'}${photo}`;
+              photo : `${import.meta.env.VITE_API_BASE || 'http://localhost:8082'}${photo}`;
           };
           
           // Gestisci diversi formati di immagine dal backend

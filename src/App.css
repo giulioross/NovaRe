@@ -563,9 +563,10 @@ body {
 }
 
 /* Chi Siamo - Nova RE Style */
-.about {
-  position: relative;
-  color: white;
+#chi-siamo .container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .about-blue,

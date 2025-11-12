@@ -147,25 +147,50 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
 
 
 
+  // Debug: stampa tutto il listing per vedere cosa contiene
+  console.log('🔍 LISTING COMPLETO in ListingDetail:', listing);
+  console.log('🔍 CAMPI DISPONIBILI nel listing:', Object.keys(listing));
+  console.log('🔍 NUMERO DI CAMPI:', Object.keys(listing).length);
+  
+  // Debug specifico per i campi principali
+  console.log('📋 DATI PRINCIPALI:');
+  console.log('- Title:', listing.title);
+  console.log('- Bedrooms:', listing.bedrooms);
+  console.log('- Bathrooms:', listing.bathrooms);
+  console.log('- Description:', listing.description);
+  console.log('- Price:', listing.price);
+  console.log('- Address:', listing.address);
+  console.log('- City:', listing.city);
+  console.log('- Energy Class:', listing.energy_class);
+  console.log('- Surface:', listing.commercial_sqm);
+  console.log('- Property Type:', listing.property_type);
+  
   // Prepara le immagini (controlla tutti i possibili campi)
   const images = [];
   
   // Controlla diversi possibili campi per le immagini
   if (listing.images && Array.isArray(listing.images) && listing.images.length > 0) {
+    console.log('✅ Trovate immagini in listing.images:', listing.images);
     images.push(...listing.images);
   }
   if (listing.photoUrls && Array.isArray(listing.photoUrls) && listing.photoUrls.length > 0) {
+    console.log('✅ Trovate immagini in listing.photoUrls:', listing.photoUrls);
     images.push(...listing.photoUrls);
   }
   if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
+    console.log('✅ Trovate immagini in listing.photos:', listing.photos);
     images.push(...listing.photos);
   }
   if (listing.imageUrl && !images.includes(listing.imageUrl)) {
+    console.log('✅ Trovata immagine in listing.imageUrl:', listing.imageUrl);
     images.push(listing.imageUrl);
   }
   if (listing.immaginePrincipale && !images.includes(listing.immaginePrincipale)) {
+    console.log('✅ Trovata immagine in listing.immaginePrincipale:', listing.immaginePrincipale);
     images.push(listing.immaginePrincipale);
   }
+  
+  console.log('📸 IMMAGINI FINALI trovate:', images);
 
 
 
@@ -242,7 +267,7 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
             opacity: 0.9,
             margin: 0
           }}>
-            📍 {formatAddress(listing.address, listing.city)}
+{formatAddress(listing.address, listing.city)}
           </p>
         </div>
       </div>
@@ -517,69 +542,217 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                 {/* Informazioni Generali */}
                 <div style={{
                   background: '#f8f9fa',
-                  padding: '20px',
+                  padding: '25px',
                   borderRadius: '12px',
                   border: '1px solid #e9ecef'
                 }}>
                   <h3 style={{ 
                     color: 'var(--color-primary)', 
-                    marginBottom: '15px', 
-                    fontSize: '1.2rem',
-                    fontWeight: '600'
+                    marginBottom: '20px', 
+                    fontSize: '1.4rem',
+                    fontWeight: '700',
+                    borderBottom: '3px solid var(--color-primary)',
+                    paddingBottom: '10px'
                   }}>
-                    🏠 Informazioni Generali
+                    DATI GENERALI IMMOBILE
                   </h3>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                    gap: '12px' 
+                  }}>
                     {listing.property_type && (
-                      <div><strong>Tipologia:</strong> {listing.property_type}</div>
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Tipologia:</strong> {listing.property_type}
+                      </div>
                     )}
                     {listing.contract_type && (
-                      <div><strong>Contratto:</strong> {listing.contract_type}</div>
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Contratto:</strong> {listing.contract_type}
+                      </div>
                     )}
                     {listing.condition && (
-                      <div><strong>Condizioni:</strong> {listing.condition}</div>
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Stato immobile:</strong> {listing.condition}
+                      </div>
                     )}
                     {listing.commercial_sqm && (
-                      <div><strong>Superficie commerciale:</strong> {listing.commercial_sqm} m²</div>
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Superficie commerciale:</strong> {listing.commercial_sqm} m²
+                      </div>
+                    )}
+                    {listing.walkable_sqm && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Superficie calpestabile:</strong> {listing.walkable_sqm} m²
+                      </div>
                     )}
                     {listing.rooms_total && (
-                      <div><strong>Vani totali:</strong> {listing.rooms_total}</div>
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Vani totali:</strong> {listing.rooms_total}
+                      </div>
+                    )}
+                    {listing.bedrooms && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Camere da letto:</strong> {listing.bedrooms}
+                      </div>
+                    )}
+                    {listing.bathrooms && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Bagni:</strong> {listing.bathrooms}
+                      </div>
                     )}
                     {listing.floor_level !== undefined && listing.floor_level !== null && (
-                      <div><strong>Piano:</strong> {listing.floor_level}</div>
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Piano:</strong> {listing.floor_level === 0 ? 'Piano terra' : 
+                                              listing.floor_level < 0 ? `${Math.abs(listing.floor_level)}° interrato` : 
+                                              `${listing.floor_level}° piano`}
+                      </div>
+                    )}
+                    {listing.total_floors && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Piani edificio:</strong> {listing.total_floors}
+                      </div>
+                    )}
+                    {listing.construction_year && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Anno costruzione:</strong> {listing.construction_year}
+                      </div>
+                    )}
+                    {listing.elevator !== undefined && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Ascensore:</strong> {listing.elevator ? 'Presente' : 'Assente'}
+                      </div>
+                    )}
+                    {listing.top_floor !== undefined && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Ultimo piano:</strong> {listing.top_floor ? 'Sì' : 'No'}
+                      </div>
+                    )}
+                    {listing.building_type && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Tipo edificio:</strong> {listing.building_type}
+                      </div>
+                    )}
+                    {listing.region && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Regione:</strong> {listing.region}
+                      </div>
                     )}
                   </div>
                 </div>
 
-                {/* Caratteristiche Energetiche */}
+                {/* Localizzazione Dettagliata */}
+                <div style={{
+                  background: '#e3f2fd',
+                  padding: '25px',
+                  borderRadius: '12px',
+                  border: '1px solid #bbdefb'
+                }}>
+                  <h3 style={{ 
+                    color: '#1976d2', 
+                    marginBottom: '20px', 
+                    fontSize: '1.4rem',
+                    fontWeight: '700',
+                    borderBottom: '3px solid #1976d2',
+                    paddingBottom: '10px'
+                  }}>
+                    LOCALIZZAZIONE
+                  </h3>
+                  
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                    gap: '12px' 
+                  }}>
+                    {listing.address && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Indirizzo:</strong> {listing.address}
+                      </div>
+                    )}
+                    {listing.city && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Città:</strong> {listing.city}
+                      </div>
+                    )}
+                    {listing.district && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Zona/Quartiere:</strong> {listing.district}
+                      </div>
+                    )}
+                    {listing.province && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Provincia:</strong> {listing.province}
+                      </div>
+                    )}
+                    {listing.postal_code && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>CAP:</strong> {listing.postal_code}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Efficienza Energetica */}
                 <div style={{
                   background: '#e8f5e8',
-                  padding: '20px',
+                  padding: '25px',
                   borderRadius: '12px',
                   border: '1px solid #c8e6c9'
                 }}>
                   <h3 style={{ 
                     color: '#2e7d32', 
-                    marginBottom: '15px', 
-                    fontSize: '1.2rem',
-                    fontWeight: '600'
+                    marginBottom: '20px', 
+                    fontSize: '1.4rem',
+                    fontWeight: '700',
+                    borderBottom: '3px solid #2e7d32',
+                    paddingBottom: '10px'
                   }}>
-                    ⚡ Efficienza Energetica
+                    EFFICIENZA ENERGETICA E IMPIANTI
                   </h3>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                    gap: '12px' 
+                  }}>
                     {listing.energy_class && (
-                      <div><strong>Classe energetica:</strong> <span style={{
-                        background: '#4caf50',
-                        color: 'white',
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        fontWeight: 'bold'
-                      }}>{listing.energy_class}</span></div>
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Classe energetica:</strong> 
+                        <span style={{
+                          background: '#4caf50',
+                          color: 'white',
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          fontWeight: 'bold',
+                          marginLeft: '8px'
+                        }}>{listing.energy_class}</span>
+                      </div>
                     )}
                     {listing.heating_type && (
-                      <div><strong>Tipo riscaldamento:</strong> {listing.heating_type}</div>
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Tipo riscaldamento:</strong> {listing.heating_type}
+                      </div>
+                    )}
+                    {listing.cooling_type && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Raffrescamento:</strong> {listing.cooling_type}
+                      </div>
+                    )}
+                    {listing.ipe_kwh_m2y && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>IPE:</strong> {listing.ipe_kwh_m2y} kWh/m²anno
+                      </div>
+                    )}
+                    {listing.heating_generator && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Generatore di calore:</strong> {listing.heating_generator}
+                      </div>
+                    )}
+                    {listing.cooling_zones && listing.cooling_zones > 0 && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Zone climatizzate:</strong> {listing.cooling_zones}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -587,26 +760,225 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                 {/* Informazioni Finanziarie */}
                 <div style={{
                   background: '#fff3e0',
-                  padding: '20px',
+                  padding: '25px',
                   borderRadius: '12px',
                   border: '1px solid #ffcc02'
                 }}>
                   <h3 style={{ 
                     color: '#ef6c00', 
-                    marginBottom: '15px', 
-                    fontSize: '1.2rem',
-                    fontWeight: '600'
+                    marginBottom: '20px', 
+                    fontSize: '1.4rem',
+                    fontWeight: '700',
+                    borderBottom: '3px solid #ef6c00',
+                    paddingBottom: '10px'
                   }}>
-                    💰 Informazioni Finanziarie
+                    INFORMAZIONI ECONOMICHE
                   </h3>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div><strong>Prezzo:</strong> {displayPrice}</div>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                    gap: '12px' 
+                  }}>
+                    <div style={{ 
+                      padding: '12px', 
+                      background: 'white', 
+                      borderRadius: '6px',
+                      fontSize: '1.1rem',
+                      fontWeight: '600'
+                    }}>
+                      <strong>Prezzo:</strong> {displayPrice}
+                    </div>
+                    {listing.price_per_sqm && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Prezzo al m²:</strong> €{Math.round(listing.price / listing.commercial_sqm)}/m²
+                      </div>
+                    )}
                     {listing.hoa_fees && listing.hoa_fees > 0 && (
-                      <div><strong>Spese condominiali:</strong> €{listing.hoa_fees}/mese</div>
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Spese condominiali:</strong> €{listing.hoa_fees}/mese
+                      </div>
+                    )}
+                    {listing.price_currency && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Valuta:</strong> {listing.price_currency}
+                      </div>
                     )}
                   </div>
                 </div>
+
+                {/* Spazi Esterni e Parcheggi */}
+                {(listing.balconies || listing.terraces_sqm || listing.garden_sqm || listing.parking_spots || listing.garage_spots) && (
+                  <div style={{
+                    background: '#f1f8e9',
+                    padding: '25px',
+                    borderRadius: '12px',
+                    border: '1px solid #c8e6c9'
+                  }}>
+                    <h3 style={{ 
+                      color: '#388e3c', 
+                      marginBottom: '20px', 
+                      fontSize: '1.4rem',
+                      fontWeight: '700',
+                      borderBottom: '3px solid #388e3c',
+                      paddingBottom: '10px'
+                    }}>
+                      SPAZI ESTERNI E PARCHEGGI
+                    </h3>
+                    
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                      gap: '12px' 
+                    }}>
+                      {listing.balconies && listing.balconies > 0 && (
+                        <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                          <strong>Balconi:</strong> {listing.balconies}
+                        </div>
+                      )}
+                      {listing.terraces_sqm && listing.terraces_sqm > 0 && (
+                        <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                          <strong>Terrazzi:</strong> {listing.terraces_sqm} m²
+                        </div>
+                      )}
+                      {listing.garden_sqm && listing.garden_sqm > 0 && (
+                        <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                          <strong>Giardino:</strong> {listing.garden_sqm} m²
+                        </div>
+                      )}
+                      {listing.parking_spots && listing.parking_spots > 0 && (
+                        <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                          <strong>Posti auto:</strong> {listing.parking_spots}
+                        </div>
+                      )}
+                      {listing.garage_spots && listing.garage_spots > 0 && (
+                        <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                          <strong>Box auto:</strong> {listing.garage_spots}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Dotazioni e Comfort */}
+                <div style={{
+                  background: '#fce4ec',
+                  padding: '25px',
+                  borderRadius: '12px',
+                  border: '1px solid #f8bbd9'
+                }}>
+                  <h3 style={{ 
+                    color: '#c2185b', 
+                    marginBottom: '20px', 
+                    fontSize: '1.4rem',
+                    fontWeight: '700',
+                    borderBottom: '3px solid #c2185b',
+                    paddingBottom: '10px'
+                  }}>
+                    DOTAZIONI E COMFORT
+                  </h3>
+                  
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                    gap: '12px' 
+                  }}>
+                    {listing.kitchen_type && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Cucina:</strong> {listing.kitchen_type}
+                      </div>
+                    )}
+                    {listing.furnished && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Arredamento:</strong> {listing.furnished}
+                      </div>
+                    )}
+                    {listing.air_conditioning !== undefined && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Aria condizionata:</strong> {listing.air_conditioning ? 'Presente' : 'Assente'}
+                      </div>
+                    )}
+                    {listing.porter !== undefined && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Portineria:</strong> {listing.porter ? 'Presente' : 'Assente'}
+                      </div>
+                    )}
+                    {listing.cellar !== undefined && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Cantina:</strong> {listing.cellar ? 'Presente' : 'Assente'}
+                      </div>
+                    )}
+                    {listing.ceiling_height && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Altezza soffitti:</strong> {listing.ceiling_height} m
+                      </div>
+                    )}
+                    {listing.smart_home !== undefined && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Smart Home/Domotica:</strong> {listing.smart_home ? 'Presente' : 'Assente'}
+                      </div>
+                    )}
+                    {listing.step_free !== undefined && (
+                      <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
+                        <strong>Senza barriere architettoniche:</strong> {listing.step_free ? 'Sì' : 'No'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Video e Tour Virtuali */}
+                {(listing.video_url || listing.virtual_tour_url) && (
+                  <div style={{
+                    background: '#f3e5f5',
+                    padding: '25px',
+                    borderRadius: '12px',
+                    border: '1px solid #ce93d8'
+                  }}>
+                    <h3 style={{ 
+                      color: '#7b1fa2', 
+                      marginBottom: '20px', 
+                      fontSize: '1.4rem',
+                      fontWeight: '700',
+                      borderBottom: '3px solid #7b1fa2',
+                      paddingBottom: '10px'
+                    }}>
+                      MULTIMEDIA
+                    </h3>
+                    
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+                      gap: '15px' 
+                    }}>
+                      {listing.video_url && (
+                        <div style={{ padding: '12px', background: 'white', borderRadius: '8px' }}>
+                          <strong>Video:</strong><br/>
+                          <a 
+                            href={listing.video_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{ color: '#7b1fa2', textDecoration: 'none', fontSize: '0.9rem' }}
+                          >
+                            {listing.video_url}
+                          </a>
+                        </div>
+                      )}
+                      {listing.virtual_tour_url && (
+                        <div style={{ padding: '12px', background: 'white', borderRadius: '8px' }}>
+                          <strong>Tour Virtuale 360°:</strong><br/>
+                          <a 
+                            href={listing.virtual_tour_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{ color: '#7b1fa2', textDecoration: 'none', fontSize: '0.9rem' }}
+                          >
+                            {listing.virtual_tour_url}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Caratteristiche Aggiuntive */}
                 {(listing.features && typeof listing.features === 'string') && (
@@ -618,24 +990,44 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                   }}>
                     <h3 style={{ 
                       color: '#7b1fa2', 
-                      marginBottom: '15px', 
-                      fontSize: '1.2rem',
-                      fontWeight: '600'
+                      marginBottom: '20px', 
+                      fontSize: '1.4rem',
+                      fontWeight: '700',
+                      borderBottom: '3px solid #7b1fa2',
+                      paddingBottom: '10px'
                     }}>
-                      ✨ Caratteristiche
+                      CARATTERISTICHE SPECIFICHE
                     </h3>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {(() => {
                         try {
                           const features = JSON.parse(listing.features);
-                          return Object.entries(features).map(([key, value]) => 
-                            value && (
+                          return Object.entries(features).map(([key, value]) => {
+                            if (!value) return null;
+                            
+                            // Gestisci diversi tipi di valori
+                            let displayValue;
+                            if (typeof value === 'object' && value !== null) {
+                              if (Array.isArray(value)) {
+                                displayValue = value.join(', ');
+                              } else {
+                                // Per oggetti, mostra le coppie chiave-valore
+                                displayValue = Object.entries(value)
+                                  .filter(([k, v]) => v)
+                                  .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`)
+                                  .join(', ');
+                              }
+                            } else {
+                              displayValue = String(value);
+                            }
+                            
+                            return displayValue ? (
                               <div key={key}>
-                                <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {value}
+                                <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {displayValue}
                               </div>
-                            )
-                          );
+                            ) : null;
+                          });
                         } catch (e) {
                           return <div>{listing.features}</div>;
                         }
@@ -654,24 +1046,44 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                   }}>
                     <h3 style={{ 
                       color: '#1565c0', 
-                      marginBottom: '15px', 
-                      fontSize: '1.2rem',
-                      fontWeight: '600'
+                      marginBottom: '20px', 
+                      fontSize: '1.4rem',
+                      fontWeight: '700',
+                      borderBottom: '3px solid #1565c0',
+                      paddingBottom: '10px'
                     }}>
-                      🏢 Informazioni Edificio
+                      INFORMAZIONI EDIFICIO
                     </h3>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {(() => {
                         try {
                           const buildingInfo = JSON.parse(listing.building_info);
-                          return Object.entries(buildingInfo).map(([key, value]) => 
-                            value && (
+                          return Object.entries(buildingInfo).map(([key, value]) => {
+                            if (!value) return null;
+                            
+                            // Gestisci diversi tipi di valori
+                            let displayValue;
+                            if (typeof value === 'object' && value !== null) {
+                              if (Array.isArray(value)) {
+                                displayValue = value.join(', ');
+                              } else {
+                                // Per oggetti, mostra le coppie chiave-valore
+                                displayValue = Object.entries(value)
+                                  .filter(([k, v]) => v)
+                                  .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`)
+                                  .join(', ');
+                              }
+                            } else {
+                              displayValue = String(value);
+                            }
+                            
+                            return displayValue ? (
                               <div key={key}>
-                                <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {value}
+                                <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {displayValue}
                               </div>
-                            )
-                          );
+                            ) : null;
+                          });
                         } catch (e) {
                           return <div>{listing.building_info}</div>;
                         }
@@ -910,8 +1322,7 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                     e.target.style.color = 'var(--color-primary)';
                   }}
                 >
-                  <span style={{ fontSize: '1.3rem' }}>📞</span>
-                  Chiama Ora
+                  CHIAMA ORA
                 </button>
               </div>
             </div>
@@ -954,7 +1365,7 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                 fontSize: '1.1rem',
                 fontWeight: '600'
               }}>
-                📞 +39 345 345 4186
+Tel: +39 345 345 4186
               </div>
             </div>
           </div>

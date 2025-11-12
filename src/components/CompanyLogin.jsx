@@ -33,7 +33,9 @@ export const useCompanyAuth = () => {
       // Simula chiamata API per autenticazione
       // In produzione, questo andrà al backend per verificare credenziali + codice azienda
       
-      console.log('🔐 Tentativo login:', { username, companyCode });
+      console.log('🔐 Tentativo login:', { username, password, companyCode });
+      console.log('🔐 Verifica admin:', username === 'admin', password === 'ddd');
+      console.log('🔐 Verifica codice:', companyCode === 'NOVARE2025', companyCode === 'NUOVARE-SECRET-2025');
       
       // Controlla prima l'admin predefinito
       if (username === 'admin' && password === 'ddd' && (companyCode === 'NOVARE2025' || companyCode === 'NUOVARE-SECRET-2025')) {
@@ -60,9 +62,11 @@ export const useCompanyAuth = () => {
         setUser(userData);
         setIsAuthenticated(true);
         
+        console.log('✅ Login admin riuscito!', userData);
         return { success: true, user: userData };
       }
 
+      console.log('❌ Credenziali admin non valide');
       // Controlla gli utenti registrati
       const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
       const foundUser = registeredUsers.find(user => 
@@ -101,6 +105,8 @@ export const useCompanyAuth = () => {
         
         return { success: true, user: userData };
       } else {
+        console.log('❌ Nessun utente registrato trovato per:', { username, companyCode });
+        console.log('👥 Utenti registrati:', registeredUsers);
         return { 
           success: false, 
           error: 'Credenziali o codice azienda non validi' 

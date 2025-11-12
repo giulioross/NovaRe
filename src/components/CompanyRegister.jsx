@@ -107,7 +107,7 @@ const CompanyRegister = ({ onRegisterSuccess, onBackToLogin }) => {
 
       console.log('🔄 Invio richiesta registrazione al backend:', registrationData);
 
-      const response = await fetch('http://localhost:8081/api/admin/register', {
+  const response = await fetch('http://localhost:8082/api/admin/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

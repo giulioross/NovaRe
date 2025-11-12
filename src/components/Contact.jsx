@@ -13,7 +13,7 @@ const Contact = () => {
   const [currentOfficeSlide, setCurrentOfficeSlide] = useState(0);
   const officesRef = useRef([]);
 
-  const API_BASE = 'http://localhost:8081/api';
+  const API_BASE = 'http://localhost:8082/api';
 
   useEffect(() => {
     const observer = new IntersectionObserver(

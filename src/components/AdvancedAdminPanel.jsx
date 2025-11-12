@@ -4,6 +4,7 @@ import AdvancedPropertyForm from './AdvancedPropertyForm';
 import AuthManager from './AuthManager';
 import { useCompanyAuth } from './CompanyLogin';
 import { listingService } from '../services/listingService';
+import { mapPropertyDataToBackend } from '../utils/payloadMapper';
 
 /**
  * Pannello admin per gestione immobili con form avanzato e autenticazione
@@ -75,59 +76,10 @@ const AdvancedAdminPanel = ({ onBack }) => {
     setIsSubmitting(true);
     
     try {
-      // Prepara i dati per il backend
-      const payload = {
-        title: propertyData.title,
-        description: propertyData.description,
-        address: propertyData.address.street,
-        city: propertyData.address.city,
-        district: propertyData.address.district,
-        province: propertyData.address.province,
-        postal_code: propertyData.address.postal_code,
-        price: propertyData.financials.price,
-        contract_type: propertyData.contract,
-        property_type: propertyData.type,
-        commercial_sqm: propertyData.size.commercial_sqm,
-        rooms_total: propertyData.size.rooms_total,
-        bedrooms: propertyData.size.bedrooms,
-        bathrooms: propertyData.size.bathrooms,
-        floor_level: propertyData.floor.level,
-        condition: propertyData.condition,
-        energy_class: propertyData.energy.ape_class,
-        heating_type: propertyData.energy.heating.type,
-        hoa_fees: propertyData.financials.hoa_fees_monthly,
-        published: propertyData.metadata.published,
-        
-        // Dati agente
-        agent_name: propertyData.agent.agent_name,
-        agent_phone: propertyData.agent.phone,
-        agent_email: propertyData.agent.email,
-        
-        // SEO
-        seo_slug: propertyData.seo.slug,
-        meta_title: propertyData.seo.meta_title,
-        meta_description: propertyData.seo.meta_description,
-        
-        // Caratteristiche come JSON
-        features: JSON.stringify({
-          finishings: propertyData.features.finishings,
-          exposure: propertyData.features.exposure,
-          kitchen: propertyData.features.kitchen,
-          furnished: propertyData.features.furnished,
-          parking: propertyData.features.parking,
-          external: propertyData.features.external,
-          accessibility: propertyData.features.accessibility
-        }),
-        
-        // Dati edificio come JSON
-        building_info: JSON.stringify({
-          type: propertyData.building.type,
-          floors: propertyData.building.floors,
-          construction_year: propertyData.building.construction_year,
-          porter: propertyData.building.porter,
-          elevator: propertyData.floor.elevator
-        })
-      };
+      // Prepara i dati per il backend usando il mapper
+      console.log('🔄 Mapping dei dati del form per il backend...');
+      const payload = mapPropertyDataToBackend(propertyData);
+      console.log('✅ Payload mappato:', payload);
 
       // Converti le immagini in file se necessario
       const imageFiles = propertyData.media.images?.length > 0 
@@ -150,10 +102,22 @@ const AdvancedAdminPanel = ({ onBack }) => {
         : [];
 
       console.log('🔄 Creazione annuncio con dati:', payload);
-      console.log('📸 Immagini da caricare:', imageFiles.length);
+      console.log('� PAYLOAD DETTAGLIATO:');
+      console.log('- Title:', payload.title);
+      console.log('- Description:', payload.description);
+      console.log('- Address:', payload.address);
+      console.log('- Price:', payload.price);
+      console.log('- Bedrooms:', payload.bedrooms);
+      console.log('- Bathrooms:', payload.bathrooms);
+      console.log('- Commercial SQM:', payload.commercial_sqm);
+      console.log('- Energy Class:', payload.energy_class);
+      console.log('- Heating Type:', payload.heating_type);
+      console.log('- Agent Name:', payload.agent_name);
+      console.log('- NUMERO TOTALE CAMPI:', Object.keys(payload).length);
+      console.log('�📸 Immagini da caricare:', imageFiles.length);
 
-      // Crea l'annuncio con il service esistente usando credenziali che funzionano
-      const result = await listingService.createListing(
+      // Crea l'annuncio con il nuovo approccio separato (JSON + foto)
+      const result = await listingService.createListingSeparated(
         payload,
         imageFiles,
         'admin', // Usa admin che funziona con curl
@@ -194,59 +158,10 @@ const AdvancedAdminPanel = ({ onBack }) => {
     setIsSubmitting(true);
     
     try {
-      // Prepara i dati per l'aggiornamento (stesso formato della creazione)
-      const payload = {
-        title: propertyData.title,
-        description: propertyData.description,
-        address: propertyData.address.street,
-        city: propertyData.address.city,
-        district: propertyData.address.district,
-        province: propertyData.address.province,
-        postal_code: propertyData.address.postal_code,
-        price: propertyData.financials.price,
-        contract_type: propertyData.contract,
-        property_type: propertyData.type,
-        commercial_sqm: propertyData.size.commercial_sqm,
-        rooms_total: propertyData.size.rooms_total,
-        bedrooms: propertyData.size.bedrooms,
-        bathrooms: propertyData.size.bathrooms,
-        floor_level: propertyData.floor.level,
-        condition: propertyData.condition,
-        energy_class: propertyData.energy.ape_class,
-        heating_type: propertyData.energy.heating.type,
-        hoa_fees: propertyData.financials.hoa_fees_monthly,
-        published: propertyData.metadata.published,
-        
-        // Dati agente
-        agent_name: propertyData.agent.agent_name,
-        agent_phone: propertyData.agent.phone,
-        agent_email: propertyData.agent.email,
-        
-        // SEO
-        seo_slug: propertyData.seo.slug,
-        meta_title: propertyData.seo.meta_title,
-        meta_description: propertyData.seo.meta_description,
-        
-        // Caratteristiche come JSON
-        features: JSON.stringify({
-          finishings: propertyData.features.finishings,
-          exposure: propertyData.features.exposure,
-          kitchen: propertyData.features.kitchen,
-          furnished: propertyData.features.furnished,
-          parking: propertyData.features.parking,
-          external: propertyData.features.external,
-          accessibility: propertyData.features.accessibility
-        }),
-        
-        // Dati edificio come JSON
-        building_info: JSON.stringify({
-          type: propertyData.building.type,
-          floors: propertyData.building.floors,
-          construction_year: propertyData.building.construction_year,
-          porter: propertyData.building.porter,
-          elevator: propertyData.floor.elevator
-        })
-      };
+      // Prepara i dati per l'aggiornamento usando il mapper
+      console.log('🔄 Mapping dei dati del form per l\'aggiornamento...');
+      const payload = mapPropertyDataToBackend(propertyData);
+      console.log('✅ Payload aggiornamento mappato:', payload);
 
       // Converti le immagini in file se necessario
       const imageFiles = propertyData.media.images?.length > 0 
@@ -269,15 +184,30 @@ const AdvancedAdminPanel = ({ onBack }) => {
         : [];
 
       console.log('🔄 Aggiornamento annuncio con dati:', payload);
-      console.log('📸 Immagini da aggiornare:', imageFiles.length);
+      console.log('� PAYLOAD COMPLETO UPDATE - NUMERO CAMPI:', Object.keys(payload).length);
+      console.log('�📸 Immagini da aggiornare:', imageFiles.length);
 
-      // Aggiorna l'annuncio con il service esistente usando credenziali che funzionano
-      const result = await listingService.updateListing(
+      // Opzione A: Approccio separato (JSON prima, poi foto)
+      // Step 1: Aggiorna JSON
+      console.log('Step 1: Aggiornamento dati JSON...');
+      const jsonResult = await listingService.updateListingJsonOnly(
         selectedListing.id,
         payload,
-        'admin', // Usa admin che funziona con curl
-        'ddd'    // Password confermata funzionante
+        'admin',
+        'ddd'
       );
+
+      // Step 2: Carica foto se presenti
+      let result = jsonResult;
+      if (imageFiles.length > 0) {
+        console.log('Step 2: Upload foto...');
+        result = await listingService.uploadListingPhotosOnly(
+          selectedListing.id,
+          imageFiles,
+          'admin',
+          'ddd'
+        );
+      }
 
       console.log('✅ Annuncio aggiornato:', result);
       
@@ -641,6 +571,54 @@ const AdvancedAdminPanel = ({ onBack }) => {
                           <span>📐 {listing.size || listing.superficie || 'N/A'} mq</span>
                           <span>🛏️ {listing.bedrooms || listing.camere || 'N/A'} camere</span>
                           <span>🚿 {listing.bathrooms || listing.bagni || 'N/A'} bagni</span>
+                        </div>
+                        
+                        {/* Data e ora di pubblicazione */}
+                        <div style={{ 
+                          marginTop: '8px', 
+                          fontSize: '0.85rem', 
+                          color: '#999',
+                          display: 'flex',
+                          gap: '15px'
+                        }}>
+                          {listing.createdAt && (
+                            <span>
+                              <strong>Creato:</strong> {new Date(listing.createdAt).toLocaleString('it-IT', {
+                                day: '2-digit',
+                                month: '2-digit', 
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          )}
+                          {listing.updatedAt && listing.updatedAt !== listing.createdAt && (
+                            <span>
+                              <strong>Modificato:</strong> {new Date(listing.updatedAt).toLocaleString('it-IT', {
+                                day: '2-digit',
+                                month: '2-digit', 
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          )}
+                          {listing.publishedAt && (
+                            <span>
+                              <strong>Pubblicato:</strong> {new Date(listing.publishedAt).toLocaleString('it-IT', {
+                                day: '2-digit',
+                                month: '2-digit', 
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          )}
+                          {!listing.createdAt && !listing.updatedAt && !listing.publishedAt && (
+                            <span>
+                              <strong>ID:</strong> {listing.id}
+                            </span>
+                          )}
                         </div>
                       </div>
                       

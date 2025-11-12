@@ -120,7 +120,7 @@ const Properties = () => {
                       </span>
                       
                       <Link
-                        to={`/immobili/${listing.id}`}
+                        to={`/listing/${listing.id}`}
                         style={{
                           background: '#007bff',
                           color: 'white',

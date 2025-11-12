@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Crea un'istanza axios configurata per Nova RE API
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082',
   // NON impostare Content-Type globale - lascia che axios lo determini in base al tipo di data
   timeout: 10000, // 10 secondi di timeout
 });

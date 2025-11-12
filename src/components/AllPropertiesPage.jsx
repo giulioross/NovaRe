@@ -85,7 +85,7 @@ const AllPropertiesPage = () => {
 
   // Componente per singola proprietà
   const PropertyCard = ({ property }) => {
-    const mainPhoto = property.photos && property.photos.length > 0 ? property.photos[0] : null;
+    const mainPhoto = property.photoUrls && property.photoUrls.length > 0 ? property.photoUrls[0] : null;
     
     return (
       <div 

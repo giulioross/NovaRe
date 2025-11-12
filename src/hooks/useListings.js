@@ -113,8 +113,34 @@ export const useListing = (id) => {
       console.log(`🔄 Caricamento immobile ${id}...`);
       const data = await listingService.getPublicListing(id);
       
-      console.log(`✅ Caricato immobile ${id}`);
+      console.log(`📦 RAW DATA ricevuto per immobile ${id}:`, data);
+      console.log(`📊 STRUTTURA COMPLETA:`, JSON.stringify(data, null, 2));
+      
+      // Debug dettagliato di TUTTI i campi
+      console.log('🔬 ANALISI COMPLETA DEI DATI RICEVUTI:');
+      console.log('===========================================');
+      if (data && typeof data === 'object') {
+        Object.keys(data).forEach(key => {
+          console.log(`  ${key}:`, data[key]);
+        });
+      }
+      console.log('===========================================');
+      
+      // Debug specifico per le immagini
+      console.log('🖼️ ANALISI IMMAGINI DETTAGLIATA:');
+      if (data.images) console.log('  ✓ data.images:', data.images);
+      if (data.immagini) console.log('  ✓ data.immagini:', data.immagini);
+      if (data.immagine) console.log('  ✓ data.immagine:', data.immagine);
+      if (data.img) console.log('  ✓ data.img:', data.img);
+      if (data.foto) console.log('  ✓ data.foto:', data.foto);
+      if (data.pictures) console.log('  ✓ data.pictures:', data.pictures);
+      if (data.imageUrl) console.log('  ✓ data.imageUrl:', data.imageUrl);
+      if (data.photoUrls) console.log('  ✓ data.photoUrls:', data.photoUrls);
+      
+      console.log(`✅ Caricato immobile ${id} - inizio mappatura...`);
       const mappedListing = mapListingFromBackend(data);
+      console.log(`🔄 Dopo mappatura:`, mappedListing);
+      
       setListing(mappedListing);
       
     } catch (err) {

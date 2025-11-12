@@ -106,7 +106,8 @@ const AboutPage = () => {
       {/* Hero Section */}
       <section className="about-hero section--dark" style={{backgroundColor: 'rgb(43, 57, 101)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '80px'}}>
         <div className="container" style={{textAlign: 'center', maxWidth: '900px', margin: '0 auto', padding: '0 2rem'}}>
-          <h1 className="display text-invert" style={{fontSize: '4rem', marginBottom: '2.5rem', color: 'white', fontWeight: 'bold', lineHeight: '1.2'}}>Chi siamo</h1>
+          <h1 className="display text-invert" style={{fontSize: '4rem', marginBottom: '2.5rem', color: 'white', fontWeight: 'bold', lineHeight: '1.2'}}>
+            Chi siamo</h1>
           <p className="lead" style={{fontSize: '1.35rem', lineHeight: '1.7', marginBottom: '2rem', color: '#e5e7eb', maxWidth: '700px', margin: '0 auto 2rem auto'}}>
             Nova RE nasce dalla volontà di innovare il settore immobiliare, integrando digitalizzazione, trasparenza, empatia ed esperienza. Il nostro obiettivo è rendere il processo di compravendita e affitto semplice, veloce e trasparente, mettendo sempre il cliente al centro.
           </p>

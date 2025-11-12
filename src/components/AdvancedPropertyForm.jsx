@@ -31,10 +31,18 @@ const FormField = React.memo(({
   error,
   onChange
 }) => {
-  // Assicurati che il valore non sia mai null o undefined
-  const safeValue = value === null || value === undefined ? '' : value;
+  // Per i campi numerici, se il valore è 0, mostra stringa vuota
+  // Per altri campi, assicurati che non sia mai null o undefined
+  const safeValue = () => {
+    if (value === null || value === undefined) return '';
+    if (type === 'number' && value === 0) return '';
+    return value;
+  };
   
   const handleChange = React.useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!onChange || typeof onChange !== 'function') {
       console.warn(`FormField '${path}': onChange non è una funzione valida`);
       return;
@@ -44,7 +52,9 @@ const FormField = React.memo(({
     
     // Conversioni per tipi specifici
     if (type === 'number') {
-      newValue = newValue === '' ? 0 : parseFloat(newValue);
+      // Se il campo è vuoto, salva null invece di 0
+      // Se ha un valore, convertilo in numero
+      newValue = newValue === '' ? null : parseFloat(newValue);
     } else if (type === 'checkbox') {
       newValue = e.target.checked;
     }
@@ -65,7 +75,7 @@ const FormField = React.memo(({
       
       {options ? (
         <select
-          value={safeValue}
+          value={safeValue()}
           onChange={handleChange}
           style={{
             width: '100%',
@@ -82,7 +92,7 @@ const FormField = React.memo(({
         </select>
       ) : multiline ? (
         <textarea
-          value={safeValue}
+          value={safeValue()}
           onChange={handleChange}
           placeholder={placeholder}
           rows={4}
@@ -98,7 +108,7 @@ const FormField = React.memo(({
       ) : (
         <input
           type={type}
-          value={safeValue}
+          value={safeValue()}
           onChange={handleChange}
           placeholder={placeholder}
           min={min}
@@ -136,7 +146,28 @@ const AdvancedPropertyForm = ({
   // Inizializza form data con schema completo
   const [formData, setFormData] = useState(() => {
     if (initialData) {
-      return { ...PROPERTY_SCHEMA, ...initialData };
+      // Merge intelligente che assicura che gli oggetti nidificati siano sempre oggetti
+      const merged = { ...PROPERTY_SCHEMA, ...initialData };
+      
+      // Assicurati che address sia sempre un oggetto
+      if (typeof merged.address === 'string') {
+        merged.address = { ...PROPERTY_SCHEMA.address, street: merged.address };
+      } else {
+        merged.address = { ...PROPERTY_SCHEMA.address, ...merged.address };
+      }
+      
+      // Assicurati che altri oggetti complessi siano correttamente inizializzati
+      merged.financials = { ...PROPERTY_SCHEMA.financials, ...merged.financials };
+      merged.size = { ...PROPERTY_SCHEMA.size, ...merged.size };
+      merged.agent = { ...PROPERTY_SCHEMA.agent, ...merged.agent };
+      merged.features = { ...PROPERTY_SCHEMA.features, ...merged.features };
+      merged.energy = { ...PROPERTY_SCHEMA.energy, ...merged.energy };
+      merged.building = { ...PROPERTY_SCHEMA.building, ...merged.building };
+      merged.floor = { ...PROPERTY_SCHEMA.floor, ...merged.floor };
+      merged.seo = { ...PROPERTY_SCHEMA.seo, ...merged.seo };
+      merged.metadata = { ...PROPERTY_SCHEMA.metadata, ...merged.metadata };
+      
+      return merged;
     }
     return {
       ...PROPERTY_SCHEMA,
@@ -224,23 +255,21 @@ const AdvancedPropertyForm = ({
     let current = formData;
     
     for (const key of keys) {
-      if (current?.[key] === undefined || current?.[key] === null) {
-        // Per array fields, ritorna array vuoto invece di stringa vuota
+      if (current?.[key] === undefined) {
+        // Per array fields, ritorna array vuoto
         if (path.includes('finishings') || path.includes('exposure') || path.includes('plants_conformity') || path.includes('hoa_fees_includes')) {
           return [];
         }
-        return '';
+        // Per campi normali, ritorna null (che verrà gestito da FormField)
+        return null;
       }
       current = current[key];
     }
     
-    // Assicurati che non sia mai null o undefined
-    if (current === null || current === undefined) {
-      // Per array fields, ritorna array vuoto
-      if (path.includes('finishings') || path.includes('exposure') || path.includes('plants_conformity') || path.includes('hoa_fees_includes')) {
-        return [];
-      }
-      return '';
+    // Ritorna il valore così com'è, anche se null
+    // FormField si occuperà di mostrarlo correttamente
+    if (path.includes('finishings') || path.includes('exposure') || path.includes('plants_conformity') || path.includes('hoa_fees_includes')) {
+      return current || [];
     }
     
     return current;
@@ -498,6 +527,9 @@ const AdvancedPropertyForm = ({
                 label="Mostra indirizzo esatto negli annunci"
                 path="address.show_exact"
                 type="checkbox"
+                value={getNestedValue('address.show_exact')}
+                error={errors['address.show_exact']}
+                onChange={handleFieldChange}
               />
               <small style={{ color: '#6c757d' }}>
                 Se disabilitato, verrà mostrata solo la zona generale
@@ -521,6 +553,9 @@ const AdvancedPropertyForm = ({
                 path="floor.level"
                 type="number"
                 placeholder="0 = Piano terra, -1 = Seminterrato"
+                value={getNestedValue('floor.level')}
+                error={errors['floor.level']}
+                onChange={handleFieldChange}
               />
               
               <FormField
@@ -528,6 +563,9 @@ const AdvancedPropertyForm = ({
                 path="building.floors"
                 type="number"
                 min={1}
+                value={getNestedValue('building.floors')}
+                error={errors['building.floors']}
+                onChange={handleFieldChange}
               />
             </div>
             
@@ -540,6 +578,9 @@ const AdvancedPropertyForm = ({
                 label="Ultimo piano"
                 path="floor.top_floor"
                 type="checkbox"
+                value={getNestedValue('floor.top_floor')}
+                error={errors['floor.top_floor']}
+                onChange={handleFieldChange}
               />
               
               <FormField
@@ -582,6 +623,9 @@ const AdvancedPropertyForm = ({
                 path="size.walkable_sqm"
                 type="number"
                 min={0}
+                value={getNestedValue('size.walkable_sqm')}
+                error={errors['size.walkable_sqm']}
+                onChange={handleFieldChange}
               />
               
               <FormField
@@ -643,6 +687,9 @@ const AdvancedPropertyForm = ({
                 path="features.parking.box"
                 type="number"
                 min={0}
+                value={getNestedValue('features.parking.box')}
+                error={errors['features.parking.box']}
+                onChange={handleFieldChange}
               />
               
               <FormField
@@ -1120,6 +1167,9 @@ const AdvancedPropertyForm = ({
                 label="Annuncio in evidenza"
                 path="metadata.featured"
                 type="checkbox"
+                value={getNestedValue('metadata.featured')}
+                error={errors['metadata.featured']}
+                onChange={handleFieldChange}
               />
             </div>
             
@@ -1156,20 +1206,26 @@ const AdvancedPropertyForm = ({
   };
 
   const handleSubmit = async () => {
+    console.log('🚀 Inizio processo di pubblicazione annuncio...');
     setIsSubmitting(true);
     
     // Validazione
+    console.log('🔍 Validazione dati form:', formData);
     const validation = validateProperty(formData);
     if (!validation.isValid) {
+      console.log('❌ Validazione fallita:', validation.errors);
       setErrors(validation.errors);
       setIsSubmitting(false);
       return;
     }
     
+    console.log('✅ Validazione superata, invio dati...');
     try {
       await onSubmit(formData);
+      console.log('✅ onSubmit completato con successo!');
     } catch (error) {
-      console.error('Errore invio form:', error);
+      console.error('❌ Errore invio form:', error);
+      alert('Errore durante la pubblicazione: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -1230,6 +1286,51 @@ const AdvancedPropertyForm = ({
         </div>
       </div>
 
+      {/* Debug button per test rapidi */}
+      {!isEditing && (
+        <button 
+          type="button"
+          onClick={() => {
+            setFormData({
+              ...formData,
+              title: "Test Appartamento Roma Centro",
+              description: "Bellissimo appartamento nel centro di Roma, completamente ristrutturato.",
+              contract: "SALE",
+              type: "APARTMENT",
+              financials: { ...formData.financials, price: 450000 },
+              size: { ...formData.size, commercial_sqm: 85, rooms_total: 3, bedrooms: 2, bathrooms: 1 },
+              address: { 
+                ...(typeof formData.address === 'object' ? formData.address : {}), 
+                street: "Via del Corso 123", 
+                city: "Roma", 
+                district: "Centro Storico",
+                province: "RM",
+                postal_code: "00187"
+              },
+              agent: {
+                ...(typeof formData.agent === 'object' ? formData.agent : {}),
+                agency_name: "NovaRe",
+                agent_name: "Mario Rossi",
+                phone: "+39 06 1234567",
+                email: "info@novareimmobiliare.it"
+              }
+            });
+            setCurrentStep(7); // Vai all'ultimo step
+          }}
+          style={{
+            padding: '8px 16px',
+            background: '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            fontSize: '0.8rem',
+            marginBottom: '10px'
+          }}
+        >
+          🚀 Riempi dati test
+        </button>
+      )}
+
       {/* Form step corrente */}
       <div key={`form-step-${currentStep}`} className="form-step-container">
         {renderCurrentStep()}
@@ -1238,6 +1339,7 @@ const AdvancedPropertyForm = ({
       {/* Navigation buttons */}
       <div className="navigation-buttons">
         <button
+          type="button"
           onClick={prevStep}
           disabled={currentStep === 1}
           className="nav-button"
@@ -1254,6 +1356,7 @@ const AdvancedPropertyForm = ({
         </button>
 
         <button
+          type="button"
           onClick={onCancel}
           className="nav-button cancel"
           style={{
@@ -1270,6 +1373,7 @@ const AdvancedPropertyForm = ({
 
         {currentStep === STEPS.length ? (
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
             className="nav-button primary"
@@ -1286,6 +1390,7 @@ const AdvancedPropertyForm = ({
           </button>
         ) : (
           <button
+            type="button"
             onClick={nextStep}
             className="nav-button primary"
             style={{

@@ -2,7 +2,7 @@ import apiClient from '../api/axios.js';
 import { createAdminAuthHeader, getActiveCredentials } from '../utils/authUtils.js';
 
 // Costante base API (usando Vite env) - FIXED process.env issue
-export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8081';
+export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8082';
 
 /**
  * Comprimi un'immagine per ridurre la dimensione del file
@@ -61,8 +61,13 @@ export function makeAuthHeader(username, password) {
   return 'Basic ' + btoa(`${username}:${password}`);
 }
 
-// Helper per creare header Basic Auth (mantenuto per compatibilità)
-const basicAuthHeader = (username, password) => {
+// Helper per creare header Basic Auth semplificato
+export function basicAuthHeader(username, password) {
+  return `Basic ${btoa(`${username}:${password}`)}`;
+}
+
+// Helper per creare header Basic Auth (formato oggetto, mantenuto per compatibilità)
+const createAuthHeaders = (username, password) => {
   console.log('🔐 DEBUG BASIC AUTH - Input:');
   console.log('  Username:', username);
   console.log('  Password:', password);
@@ -132,7 +137,9 @@ export const listingService = {
         getActiveCredentials();
       
       const response = await apiClient.get('/api/admin/listings', {
-        headers: basicAuthHeader(credentials.username, credentials.password)
+        headers: {
+          'Authorization': basicAuthHeader(credentials.username, credentials.password)
+        }
       });
       return response.data;
     } catch (error) {
@@ -164,7 +171,9 @@ export const listingService = {
 
       // Step 1: Crea immobile con JSON
       const response = await apiClient.post('/api/admin/listings', listing, {
-        headers: basicAuthHeader(credentials.username, credentials.password)
+        headers: {
+          'Authorization': basicAuthHeader(credentials.username, credentials.password)
+        }
       });
       
       console.log('✅ Immobile creato con successo:', response.data);
@@ -206,7 +215,9 @@ export const listingService = {
       console.log('📝 Dati listing:', listing);
 
       const response = await apiClient.put(`/api/admin/listings/${id}`, listing, {
-        headers: basicAuthHeader(credentials.username, credentials.password)
+        headers: {
+          'Authorization': basicAuthHeader(credentials.username, credentials.password)
+        }
       });
       
       console.log('✅ Listing aggiornato con successo:', response.data);
@@ -289,7 +300,9 @@ export const listingService = {
       console.log('🔐 Credenziali usate:', { username: credentials.username, hasPassword: !!credentials.password });
 
       const response = await apiClient.delete(`/api/admin/listings/${id}`, {
-        headers: basicAuthHeader(credentials.username, credentials.password)
+        headers: {
+          'Authorization': basicAuthHeader(credentials.username, credentials.password)
+        }
       });
       
       console.log('✅ Eliminazione API completata:', response.status);
@@ -441,6 +454,209 @@ export const listingService = {
       return updated;
     } catch (error) {
       console.error('❌ listingService - updateListingWithPhotos error:', error);
+      throw error;
+    }
+  },
+
+  // ===== NUOVE FUNZIONI PER IL BACKEND AGGIORNATO =====
+
+  /**
+   * Aggiorna solo i dati JSON di un immobile (senza foto)
+   * @param {string|number} id - ID dell'immobile
+   * @param {Object} listingDto - Dati dell'immobile in formato DTO
+   * @param {string} username - Username admin
+   * @param {string} password - Password admin
+   * @returns {Promise<Object>} Immobile aggiornato
+   */
+  async updateListingJsonOnly(id, listingDto, username, password) {
+    try {
+      const credentials = username && password ? 
+        { username, password } : 
+        getActiveCredentials();
+
+      console.log('🔄 Aggiornamento solo JSON per listing:', id);
+      console.log('📝 Payload:', listingDto);
+
+      const response = await apiClient.put(`/api/admin/listings/${id}/json`, listingDto, {
+        headers: {
+          'Authorization': `Basic ${btoa(`${credentials.username}:${credentials.password}`)}`
+        }
+      });
+
+      console.log('✅ JSON aggiornato con successo:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Errore aggiornamento JSON:', error);
+      console.error('📋 Status:', error.response?.status);
+      console.error('📋 Response:', error.response?.data);
+      throw error;
+    }
+  },
+
+  /**
+   * Carica foto per un immobile esistente
+   * @param {string|number} id - ID dell'immobile
+   * @param {File[]} files - Array di file immagine
+   * @param {string} username - Username admin
+   * @param {string} password - Password admin
+   * @returns {Promise<Object>} Immobile aggiornato con foto
+   */
+  async uploadListingPhotosOnly(id, files, username, password) {
+    try {
+      const credentials = username && password ? 
+        { username, password } : 
+        getActiveCredentials();
+
+      console.log('📸 Upload foto per listing:', id);
+      console.log('📷 Numero file:', files.length);
+
+      // Comprimi le immagini prima dell'upload
+      console.log('🔧 Compressione immagini in corso...');
+      const compressedFiles = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        console.log(`📸 Compressione file ${i + 1}/${files.length}: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+        
+        if (file.type.startsWith('image/')) {
+          // Usa compressione aggressiva per evitare errori di dimensione
+          const quality = file.size > 2000000 ? 0.4 : 0.5; // 40% se > 2MB, altrimenti 50%
+          const maxWidth = file.size > 5000000 ? 500 : 600; // 500px se > 5MB, altrimenti 600px
+          
+          const compressed = await compressImage(file, maxWidth, quality);
+          console.log(`✅ Compresso: ${file.name} da ${(file.size / 1024 / 1024).toFixed(2)} MB a ${(compressed.size / 1024 / 1024).toFixed(2)} MB`);
+          compressedFiles.push(compressed);
+        } else {
+          compressedFiles.push(file);
+        }
+      }
+
+      // Controllo finale delle dimensioni
+      const finalFiles = [];
+      let totalSize = 0;
+      const MAX_FILE_SIZE = 1024 * 1024 * 2; // 2MB per file
+      const MAX_TOTAL_SIZE = 1024 * 1024 * 10; // 10MB totale
+      
+      for (const file of compressedFiles) {
+        if (file.size > MAX_FILE_SIZE) {
+          console.warn(`⚠️ File ${file.name} ancora troppo grande (${(file.size / 1024 / 1024).toFixed(2)} MB), saltato`);
+          continue;
+        }
+        
+        if (totalSize + file.size > MAX_TOTAL_SIZE) {
+          console.warn(`⚠️ Limite totale raggiunto, file ${file.name} saltato`);
+          break;
+        }
+        
+        finalFiles.push(file);
+        totalSize += file.size;
+      }
+      
+      console.log(`📊 Upload finale: ${finalFiles.length} file per ${(totalSize / 1024 / 1024).toFixed(2)} MB totali`);
+
+      const formData = new FormData();
+      finalFiles.forEach(file => {
+        formData.append('photos', file);
+        console.log('📎 Aggiunto file finale:', file.name, (file.size / 1024).toFixed(1), 'KB');
+      });
+
+      const response = await apiClient.post(`/api/admin/listings/${id}/photos`, formData, {
+        headers: {
+          'Authorization': `Basic ${btoa(`${credentials.username}:${credentials.password}`)}`
+          // NON impostare Content-Type - axios lo fa automaticamente per FormData
+        }
+      });
+
+      console.log('✅ Foto caricate con successo:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Errore upload foto:', error);
+      console.error('📋 Status:', error.response?.status);
+      console.error('📋 Response:', error.response?.data);
+      throw error;
+    }
+  },
+
+  /**
+   * Aggiorna immobile con approccio multipart (JSON + foto in una chiamata)
+   * @param {string|number} id - ID dell'immobile
+   * @param {Object} listingDto - Dati dell'immobile
+   * @param {File[]} files - Array di file immagine
+   * @param {string} username - Username admin
+   * @param {string} password - Password admin
+   * @returns {Promise<Object>} Immobile aggiornato
+   */
+  async updateListingMultipart(id, listingDto, files, username, password) {
+    try {
+      const credentials = username && password ? 
+        { username, password } : 
+        getActiveCredentials();
+
+      console.log('🔄 Aggiornamento multipart per listing:', id);
+      console.log('📝 Payload:', listingDto);
+      console.log('📷 Numero file:', files.length);
+
+      const formData = new FormData();
+      formData.append('listing', JSON.stringify(listingDto));
+      files.forEach(file => {
+        formData.append('photos', file);
+        console.log('📎 Aggiunto file:', file.name, file.size, 'bytes');
+      });
+
+      const response = await apiClient.put(`/api/admin/listings/${id}`, formData, {
+        headers: {
+          'Authorization': `Basic ${btoa(`${credentials.username}:${credentials.password}`)}`
+          // NON impostare Content-Type - axios lo fa automaticamente per FormData
+        }
+      });
+
+      console.log('✅ Aggiornamento multipart completato:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Errore aggiornamento multipart:', error);
+      console.error('📋 Status:', error.response?.status);
+      console.error('📋 Response:', error.response?.data);
+      throw error;
+    }
+  },
+
+  /**
+   * Crea un nuovo immobile con approccio separato (JSON prima, poi foto)
+   * @param {Object} listingDto - Dati dell'immobile
+   * @param {File[]} files - Array di file immagine
+   * @param {string} username - Username admin
+   * @param {string} password - Password admin
+   * @returns {Promise<Object>} Immobile creato con foto
+   */
+  async createListingSeparated(listingDto, files, username, password) {
+    try {
+      const credentials = username && password ? 
+        { username, password } : 
+        getActiveCredentials();
+
+      console.log('🔄 Step 1: Creazione immobile (JSON)');
+      console.log('📝 Payload:', listingDto);
+
+      // Step 1: Crea immobile con JSON
+      const response = await apiClient.post('/api/admin/listings', listingDto, {
+        headers: {
+          'Authorization': `Basic ${btoa(`${credentials.username}:${credentials.password}`)}`
+        }
+      });
+
+      console.log('✅ Immobile creato:', response.data);
+      const createdListing = response.data;
+
+      // Step 2: Upload foto se presenti
+      if (files && files.length > 0) {
+        console.log('📸 Step 2: Upload foto per immobile:', createdListing.id);
+        const updatedListing = await this.uploadListingPhotosOnly(createdListing.id, files, credentials.username, credentials.password);
+        return updatedListing;
+      }
+
+      return createdListing;
+    } catch (error) {
+      console.error('❌ Errore creazione immobile separata:', error);
       throw error;
     }
   }

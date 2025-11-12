@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8081/api';
+const API_BASE = 'http://localhost:8082/api';
 
 // Servizio per gestire le chiamate API relative agli immobili
 export const propertyService = {
