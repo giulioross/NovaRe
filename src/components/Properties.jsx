@@ -1,12 +1,22 @@
-﻿import React from 'react';
+﻿import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useListings } from '../hooks/useListings';
 
 const Properties = () => {
   const { listings, loading } = useListings();
+  const [currentPropertySlide, setCurrentPropertySlide] = useState(0);
   
   // Mostra i primi 3 immobili come "in evidenza"
   const featuredListings = listings?.slice(0, 3) || [];
+
+  // Funzioni per il carosello mobile
+  const nextPropertySlide = () => {
+    setCurrentPropertySlide((prev) => (prev + 1) % featuredListings.length);
+  };
+  
+  const prevPropertySlide = () => {
+    setCurrentPropertySlide((prev) => (prev - 1 + featuredListings.length) % featuredListings.length);
+  };
 
   // Funzione per trovare la prima immagine disponibile
   const getFirstImage = (listing) => {
@@ -37,101 +47,266 @@ const Properties = () => {
           Ogni proprietà è selezionata per qualità, posizione e valore.
         </p>
         
-        {/* Mostra alcuni immobili in evidenza se disponibili */}
-        {!loading && featuredListings.length > 0 && (
-          <div className="properties-grid">
-            {featuredListings.map((listing) => {
-              const firstImage = getFirstImage(listing);
-
-              return (
-                <div
-                  key={listing.id}
-                  style={{
-                    background: 'rgba(255,255,255,0.95)',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
-                    transition: 'transform 0.3s ease',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
-                  onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-                >
-                  {/* Immagine */}
-                  <div style={{
-                    height: '150px',
-                    background: firstImage 
-                      ? `url(${firstImage})` 
-                      : 'linear-gradient(45deg, #007bff, #0056b3)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontSize: '2rem'
+        {/* Desktop: Griglia 3 colonne */}
+        <div className="properties-grid-desktop" style={{display: 'none'}}>
+          {!loading && featuredListings.length > 0 && featuredListings.map((listing) => {
+            const firstImage = getFirstImage(listing);
+            return (
+              <div
+                key={listing.id}
+                style={{
+                  background: 'rgba(255,255,255,0.95)',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
+                  transition: 'transform 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => e.target.closest('div').style.transform = 'translateY(-5px)'}
+                onMouseLeave={(e) => e.target.closest('div').style.transform = 'translateY(0)'}
+              >
+                {/* Immagine */}
+                <div style={{
+                  height: '150px',
+                  background: firstImage 
+                    ? `url(${firstImage})` 
+                    : 'linear-gradient(45deg, #007bff, #0056b3)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '2rem'
+                }}>
+                  {!firstImage && '🏠'}
+                </div>
+                
+                {/* Contenuto */}
+                <div style={{ padding: '15px' }}>
+                  <h3 style={{ 
+                    margin: '0 0 8px 0', 
+                    fontSize: '1.1rem',
+                    color: '#1f2937',
+                    fontWeight: 'bold'
                   }}>
-                    {!firstImage && '🏠'}
+                    {listing.title || listing.titolo || 'Immobile'}
+                  </h3>
+                  <p style={{ 
+                    margin: '0 0 10px 0', 
+                    color: '#6b7280',
+                    fontSize: '0.9rem'
+                  }}>
+                    📍 {listing.location || listing.zona || 'Roma'}
+                  </p>
+                  <div style={{ 
+                    fontSize: '1.2rem', 
+                    fontWeight: 'bold', 
+                    color: '#007bff',
+                    marginBottom: '10px'
+                  }}>
+                    €{listing.price?.toLocaleString() || listing.prezzo?.toLocaleString() || 'N/A'}
                   </div>
-                  
-                  {/* Contenuto */}
-                  <div style={{ padding: '15px' }}>
-                    <h3 style={{ 
-                      margin: '0 0 8px 0', 
-                      color: '#333',
-                      fontSize: '1rem',
-                      fontWeight: '600'
-                    }}>
-                      {listing.title || 'Immobile'}
-                    </h3>
-                    
-                    <p style={{
-                      color: '#666',
-                      fontSize: '0.85rem',
-                      margin: '0 0 10px 0',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      lineHeight: '1.3'
-                    }}>
-                      {listing.description || 'Immobile disponibile'}
-                    </p>
-                    
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <span style={{
-                        fontSize: '0.9rem',
-                        fontWeight: 'bold',
-                        color: '#007bff'
-                      }}>
-                        {listing.price ? `€ ${listing.price.toLocaleString()}` : 'Trattativa'}
-                      </span>
-                      
-                      <Link
-                        to={`/listing/${listing.id}`}
+                  <Link 
+                    to={`/listing/${listing.id}`}
+                    style={{
+                      display: 'inline-block',
+                      background: 'linear-gradient(45deg, #007bff, #0056b3)',
+                      color: 'white',
+                      padding: '8px 16px',
+                      borderRadius: '20px',
+                      textDecoration: 'none',
+                      fontSize: '0.9rem',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    Scopri di più
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Mobile: Carosello */}
+        <div className="properties-carousel-mobile" style={{display: 'block'}}>
+          {!loading && featuredListings.length > 0 && (
+            <div style={{ position: 'relative', maxWidth: '320px', margin: '0 auto' }}>
+              <div style={{ 
+                overflow: 'hidden',
+                borderRadius: '12px'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  transform: `translateX(-${currentPropertySlide * 100}%)`,
+                  transition: 'transform 0.3s ease'
+                }}>
+                  {featuredListings.map((listing) => {
+                    const firstImage = getFirstImage(listing);
+                    return (
+                      <div
+                        key={listing.id}
                         style={{
-                          background: '#007bff',
-                          color: 'white',
-                          padding: '6px 12px',
-                          borderRadius: '6px',
-                          textDecoration: 'none',
-                          fontSize: '0.8rem',
-                          fontWeight: '600'
+                          minWidth: '100%',
+                          background: 'rgba(255,255,255,0.95)',
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          boxShadow: '0 6px 20px rgba(0,0,0,0.2)'
                         }}
                       >
-                        Dettagli →
-                      </Link>
-                    </div>
-                  </div>
+                        {/* Immagine */}
+                        <div style={{
+                          height: '180px',
+                          background: firstImage 
+                            ? `url(${firstImage})` 
+                            : 'linear-gradient(45deg, #007bff, #0056b3)',
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white',
+                          fontSize: '2rem'
+                        }}>
+                          {!firstImage && '🏠'}
+                        </div>
+                        
+                        {/* Contenuto */}
+                        <div style={{ padding: '20px' }}>
+                          <h3 style={{ 
+                            margin: '0 0 10px 0', 
+                            fontSize: '1.2rem',
+                            color: '#1f2937',
+                            fontWeight: 'bold',
+                            textAlign: 'center'
+                          }}>
+                            {listing.title || listing.titolo || 'Immobile'}
+                          </h3>
+                          <p style={{ 
+                            margin: '0 0 15px 0', 
+                            color: '#6b7280',
+                            fontSize: '1rem',
+                            textAlign: 'center'
+                          }}>
+                            📍 {listing.location || listing.zona || 'Roma'}
+                          </p>
+                          <div style={{ 
+                            fontSize: '1.4rem', 
+                            fontWeight: 'bold', 
+                            color: '#007bff',
+                            marginBottom: '15px',
+                            textAlign: 'center'
+                          }}>
+                            €{listing.price?.toLocaleString() || listing.prezzo?.toLocaleString() || 'N/A'}
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <Link 
+                              to={`/listing/${listing.id}`}
+                              style={{
+                                display: 'inline-block',
+                                background: 'linear-gradient(45deg, #007bff, #0056b3)',
+                                color: 'white',
+                                padding: '10px 20px',
+                                borderRadius: '25px',
+                                textDecoration: 'none',
+                                fontSize: '1rem',
+                                fontWeight: '500',
+                                transition: 'all 0.3s ease'
+                              }}
+                            >
+                              Scopri di più
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
-        )}
+              </div>
+
+              {/* Controlli carosello */}
+              {featuredListings.length > 1 && (
+                <>
+                  <button
+                    onClick={prevPropertySlide}
+                    style={{
+                      position: 'absolute',
+                      left: '-15px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'rgba(255,255,255,0.9)',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '40px',
+                      height: '40px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+                      fontSize: '16px',
+                      color: '#007bff'
+                    }}
+                  >
+                    ←
+                  </button>
+                  <button
+                    onClick={nextPropertySlide}
+                    style={{
+                      position: 'absolute',
+                      right: '-15px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'rgba(255,255,255,0.9)',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '40px',
+                      height: '40px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+                      fontSize: '16px',
+                      color: '#007bff'
+                    }}
+                  >
+                    →
+                  </button>
+                </>
+              )}
+
+              {/* Indicatori */}
+              {featuredListings.length > 1 && (
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  marginTop: '15px'
+                }}>
+                  {featuredListings.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentPropertySlide(index)}
+                      style={{
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        background: index === currentPropertySlide ? '#007bff' : 'rgba(255,255,255,0.5)',
+                        cursor: 'pointer',
+                        transition: 'background 0.3s ease'
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+
         
         {/* Bottoni per navigare agli immobili */}
         <div className="properties-buttons">

@@ -265,6 +265,12 @@ const AdvancedPropertyForm = ({
         const hasChanged = Object.keys(changes).length > 0;
         setHasChanges(hasChanged);
         
+        console.log('🔍 Debug Change Detection:');
+        console.log('   originalData keys:', Object.keys(originalData));
+        console.log('   newData keys:', Object.keys(newData));
+        console.log('   changes found:', changes);
+        console.log('   hasChanged:', hasChanged);
+        
         if (hasChanged) {
           console.log('📝 Modifiche rilevate:', changes);
         }
@@ -1247,19 +1253,27 @@ const AdvancedPropertyForm = ({
     console.log('✅ Validazione superata, preparazione invio...');
     
     try {
-      // Se siamo in modalità edit e abbiamo dati originali, invia solo le modifiche
-      if (isEditing && originalData && hasChanges) {
+      // Se siamo in modalità edit, calcola sempre le modifiche in tempo reale
+      if (isEditing && originalData) {
         const changes = createUpdatePayload(originalData, formData);
-        console.log('📝 Modalità EDIT - Invio solo modifiche:', changes);
-        console.log('📊 Campi modificati:', Object.keys(changes).length);
+        const hasActualChanges = Object.keys(changes).length > 0;
         
-        // Passa sia i dati completi che le modifiche al parent
-        await onSubmit(formData, { changesOnly: changes, isPartialUpdate: true });
-      } else if (isEditing && !hasChanges) {
-        console.log('ℹ️ Modalità EDIT - Nessuna modifica rilevata');
-        alert('Nessuna modifica da salvare');
-        setIsSubmitting(false);
-        return;
+        console.log('🔍 Submit Check - Calcolo modifiche in tempo reale:');
+        console.log('   hasActualChanges:', hasActualChanges);
+        console.log('   changes count:', Object.keys(changes).length);
+        
+        if (hasActualChanges) {
+          console.log('📝 Modalità EDIT - Invio solo modifiche:', changes);
+          console.log('📊 Campi modificati:', Object.keys(changes).length);
+          
+          // Passa sia i dati completi che le modifiche al parent
+          await onSubmit(formData, { changesOnly: changes, isPartialUpdate: true });
+        } else {
+          console.log('ℹ️ Modalità EDIT - Nessuna modifica rilevata');
+          alert('Nessuna modifica da salvare');
+          setIsSubmitting(false);
+          return;
+        }
       } else {
         // Modalità creazione - invia tutti i dati
         console.log('🆕 Modalità CREAZIONE - Invio dati completi');

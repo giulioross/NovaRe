@@ -287,7 +287,7 @@ export const listingService = {
    * @param {string} password - Password admin (opzionale)
    * @returns {Promise<Object>} Immobile aggiornato
    */
-  async patchListing(id, changes, username, password) {
+  async patchListing(id, changes, username, password, fallbackData = null) {
     try {
       // Usa credenziali predefinite se non specificate
       const credentials = username && password ? 
@@ -320,9 +320,21 @@ export const listingService = {
       console.error('📋 Response data:', error.response?.data);
       
       // Se il backend non supporta PATCH, fallback a PUT
-      if (error.response?.status === 405 || error.response?.status === 501) {
-        console.log('⚠️ PATCH non supportato, fallback a PUT completo');
-        return this.updateListing(id, changes, username, password);
+      const isMethodNotSupported = 
+        error.response?.status === 405 || 
+        error.response?.status === 501 ||
+        (error.response?.status === 500 && 
+         error.response?.data?.error?.includes('not supported'));
+         
+      if (isMethodNotSupported) {
+        console.log('⚠️ PATCH non supportato dal backend, fallback a PUT completo');
+        console.log('📝 Convertendo aggiornamento parziale in aggiornamento completo...');
+        
+        // Usa i dati completi se forniti, altrimenti le sole modifiche
+        const dataToUpdate = fallbackData || changes;
+        console.log('📦 Dati per fallback PUT:', dataToUpdate);
+        
+        return this.updateListing(id, dataToUpdate, username, password);
       }
       
       throw error;

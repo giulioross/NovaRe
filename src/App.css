@@ -932,6 +932,35 @@ body {
   }
 }
 
+/* Properties Desktop/Mobile Layout */
+.properties-grid-desktop {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin: 40px auto;
+  max-width: 1000px;
+}
+
+.properties-carousel-mobile {
+  display: none !important;
+}
+
+@media (max-width: 1024px) {
+  .properties-grid-desktop {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .properties-grid-desktop {
+    display: none !important;
+  }
+  
+  .properties-carousel-mobile {
+    display: block !important;
+  }
+}
+
 /* Services - Nova RE Style */
 .services-grid {
   display: grid;
@@ -1588,6 +1617,21 @@ body {
     grid-template-columns: 1fr;
     gap: 30px;
     text-align: center;
+  }
+  
+  .footer-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .footer-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   
   .footer-section h3 {

@@ -170,12 +170,16 @@ const AdvancedAdminPanel = ({ onBack }) => {
         const partialPayload = mapPropertyDataToBackend(updateOptions.changesOnly);
         console.log('✅ Payload parziale mappato:', partialPayload);
         
+        // Prepara anche i dati completi per eventuale fallback
+        const completePayload = mapPropertyDataToBackend(propertyData);
+        
         // Usa il nuovo metodo PATCH per aggiornamento parziale
         result = await listingService.patchListing(
           selectedListing.id,
           partialPayload,
           'admin',
-          'ddd'
+          'ddd',
+          completePayload // Dati completi per fallback
         );
         
         console.log('✅ Aggiornamento parziale completato:', result);
@@ -605,48 +609,85 @@ const AdvancedAdminPanel = ({ onBack }) => {
                           display: 'flex',
                           gap: '15px'
                         }}>
-                          {listing.createdAt && (
-                            <span>
-                              <strong>Creato:</strong> {new Date(listing.createdAt).toLocaleString('it-IT', {
-                                day: '2-digit',
-                                month: '2-digit', 
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          )}
-                          {listing.updatedAt && listing.updatedAt !== listing.createdAt && (
-                            <span>
-                              <strong>Modificato:</strong> {new Date(listing.updatedAt).toLocaleString('it-IT', {
-                                day: '2-digit',
-                                month: '2-digit', 
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          )}
-                          {listing.publishedAt && (
-                            <span>
-                              <strong>Pubblicato:</strong> {new Date(listing.publishedAt).toLocaleString('it-IT', {
-                                day: '2-digit',
-                                month: '2-digit', 
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          )}
-                          {!listing.createdAt && !listing.updatedAt && !listing.publishedAt && (
-                            <span>
-                              <strong>ID:</strong> {listing.id}
-                            </span>
-                          )}
+                          {(() => {
+                            const formatTimestamp = (timestamp) => {
+                              if (!timestamp) return null;
+                              
+                              // Se è una stringa ISO, usala direttamente
+                              if (typeof timestamp === 'string' && timestamp.includes('T')) {
+                                return new Date(timestamp).toLocaleString('it-IT', {
+                                  day: '2-digit',
+                                  month: '2-digit', 
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                });
+                              }
+                              
+                              // Se è un numero Unix timestamp in secondi, convertilo a millisecondi
+                              if (typeof timestamp === 'number') {
+                                const date = timestamp < 10000000000 ? 
+                                  new Date(timestamp * 1000) : // Timestamp in secondi
+                                  new Date(timestamp); // Timestamp in millisecondi
+                                  
+                                // Verifica che sia una data valida e non 1970
+                                if (date.getFullYear() > 1990) {
+                                  return date.toLocaleString('it-IT', {
+                                    day: '2-digit',
+                                    month: '2-digit', 
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  });
+                                }
+                              }
+                              
+                              return null;
+                            };
+                            
+                            const createdFormatted = formatTimestamp(listing.createdAt);
+                            const updatedFormatted = formatTimestamp(listing.updatedAt);
+                            
+                            return (
+                              <>
+                                {createdFormatted && (
+                                  <span>
+                                    <strong>Creato:</strong> {createdFormatted}
+                                  </span>
+                                )}
+                                {updatedFormatted && updatedFormatted !== createdFormatted && (
+                                  <span>
+                                    <strong>Modificato:</strong> {updatedFormatted}
+                                  </span>
+                                )}
+                                {!createdFormatted && !updatedFormatted && (
+                                  <span>
+                                    <strong>ID:</strong> {listing.id}
+                                  </span>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
                       
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <div className="listing-actions">
+                        <button
+                          onClick={() => window.open(`/listing/${listing.id}`, '_blank')}
+                          style={{
+                            background: 'var(--color-primary)',
+                            color: 'white',
+                            border: 'none',  
+                            padding: '8px 16px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem',
+                            marginRight: '8px'
+                          }}
+                        >
+                          👁️ Visualizza
+                        </button>
+                        
                         {hasPermission('edit') && (
                           <button
                             onClick={() => {
@@ -684,7 +725,7 @@ const AdvancedAdminPanel = ({ onBack }) => {
                               fontSize: '0.9rem'
                             }}
                           >
-                            {listing.published ? '👁️ Online' : '👁️‍🗨️ Bozza'}
+                            {listing.published ? '👁️ Pubblico' : '👁️‍🗨️ Bozza'}
                           </button>
                         )}
                         

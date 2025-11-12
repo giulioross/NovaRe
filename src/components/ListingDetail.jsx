@@ -711,12 +711,26 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                     EFFICIENZA ENERGETICA E IMPIANTI
                   </h3>
                   
+                  {/* Debug: mostra sempre se ci sono dati energetici */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <div style={{ background: 'yellow', padding: '10px', marginBottom: '10px', fontSize: '12px' }}>
+                      <strong>DEBUG Efficienza Energetica:</strong><br/>
+                      energy object: {JSON.stringify(listing.energy)}<br/>
+                      ape_class: {listing.energy?.ape_class || 'null'}<br/>
+                      ipe_kwh_m2y: {listing.energy?.ipe_kwh_m2y || 'null'}<br/>
+                      heating_type: {listing.energy?.heating_type || 'null'}<br/>
+                      cooling_type: {listing.energy?.cooling_type || 'null'}<br/>
+                      heating_generator: {listing.energy?.heating_generator || 'null'}<br/>
+                      cooling_zones: {listing.energy?.cooling_zones || 'null'}
+                    </div>
+                  )}
+                  
                   <div style={{ 
                     display: 'grid', 
                     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
                     gap: '12px' 
                   }}>
-                    {listing.energy_class && (
+                    {listing.energy?.ape_class && (
                       <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
                         <strong>Classe energetica:</strong> 
                         <span style={{
@@ -726,32 +740,32 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                           borderRadius: '6px',
                           fontWeight: 'bold',
                           marginLeft: '8px'
-                        }}>{listing.energy_class}</span>
+                        }}>{listing.energy.ape_class}</span>
                       </div>
                     )}
-                    {listing.heating_type && (
+                    {listing.energy?.heating_type && (
                       <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
-                        <strong>Tipo riscaldamento:</strong> {listing.heating_type}
+                        <strong>Tipo riscaldamento:</strong> {listing.energy.heating_type}
                       </div>
                     )}
-                    {listing.cooling_type && (
+                    {listing.energy?.cooling_type && (
                       <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
-                        <strong>Raffrescamento:</strong> {listing.cooling_type}
+                        <strong>Raffrescamento:</strong> {listing.energy.cooling_type}
                       </div>
                     )}
-                    {listing.ipe_kwh_m2y && (
+                    {listing.energy?.ipe_kwh_m2y && (
                       <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
-                        <strong>IPE:</strong> {listing.ipe_kwh_m2y} kWh/m²anno
+                        <strong>IPE:</strong> {listing.energy.ipe_kwh_m2y} kWh/m²anno
                       </div>
                     )}
-                    {listing.heating_generator && (
+                    {listing.energy?.heating_generator && (
                       <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
-                        <strong>Generatore di calore:</strong> {listing.heating_generator}
+                        <strong>Generatore di calore:</strong> {listing.energy.heating_generator}
                       </div>
                     )}
-                    {listing.cooling_zones && listing.cooling_zones > 0 && (
+                    {listing.energy?.cooling_zones && listing.energy.cooling_zones > 0 && (
                       <div style={{ padding: '8px', background: 'white', borderRadius: '6px' }}>
-                        <strong>Zone climatizzate:</strong> {listing.cooling_zones}
+                        <strong>Zone climatizzate:</strong> {listing.energy.cooling_zones}
                       </div>
                     )}
                   </div>
@@ -1002,6 +1016,37 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {(() => {
                         try {
+                          // Mappa di traduzioni per le chiavi
+                          const translations = {
+                            'kitchen': 'Cucina',
+                            'furnished': 'Arredamento',
+                            'parking': 'Parcheggio',
+                            'external': 'Esterni',
+                            'building_info': 'Informazioni Edificio',
+                            'box': 'Box auto',
+                            'parking_spot': 'Posto auto',
+                            'balconies': 'Balconi',
+                            'terraces_sqm': 'Terrazze mq',
+                            'garden_sqm': 'Giardino mq',
+                            'abitabile': 'Abitabile',
+                            'non_arredato': 'Non arredato',
+                            'arredato': 'Arredato',
+                            'semi_arredato': 'Semi arredato'
+                          };
+                          
+                          // Funzione per tradurre le chiavi
+                          const translateKey = (key) => {
+                            return translations[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                          };
+                          
+                          // Funzione per tradurre i valori
+                          const translateValue = (value) => {
+                            if (typeof value === 'string') {
+                              return translations[value] || value;
+                            }
+                            return value;
+                          };
+                          
                           const features = JSON.parse(listing.features);
                           return Object.entries(features).map(([key, value]) => {
                             if (!value) return null;
@@ -1010,21 +1055,21 @@ const ListingDetail = ({ listingId, onBack, mockListing }) => {
                             let displayValue;
                             if (typeof value === 'object' && value !== null) {
                               if (Array.isArray(value)) {
-                                displayValue = value.join(', ');
+                                displayValue = value.map(v => translateValue(v)).join(', ');
                               } else {
-                                // Per oggetti, mostra le coppie chiave-valore
+                                // Per oggetti, mostra le coppie chiave-valore tradotte
                                 displayValue = Object.entries(value)
                                   .filter(([k, v]) => v)
-                                  .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`)
+                                  .map(([k, v]) => `${translateKey(k)}: ${translateValue(v)}`)
                                   .join(', ');
                               }
                             } else {
-                              displayValue = String(value);
+                              displayValue = translateValue(value);
                             }
                             
                             return displayValue ? (
                               <div key={key}>
-                                <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {displayValue}
+                                <strong>{translateKey(key)}:</strong> {displayValue}
                               </div>
                             ) : null;
                           });

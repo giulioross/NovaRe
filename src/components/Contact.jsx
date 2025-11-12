@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import emailjs from '@emailjs/browser';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -74,23 +75,38 @@ const Contact = () => {
 
   const sendContactForm = async (data) => {
     try {
-      const response = await fetch(`${API_BASE}/contacts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-        credentials: 'include'
-      });
+      // Crea email precompilata che si apre nel client email dell'utente
+      const contactEmail = 'info@novareimmobiliare.it';
+      const subject = encodeURIComponent(`Richiesta di contatto da ${data.nome} ${data.cognome}`);
+      const body = encodeURIComponent(
+        `Salve,\n\n` +
+        `Vi scrivo per richiedere informazioni.\n\n` +
+        `Dati di contatto:\n` +
+        `Nome: ${data.nome} ${data.cognome}\n` +
+        `Email: ${data.email}\n` +
+        `Telefono: ${data.telefono || 'Non fornito'}\n\n` +
+        `Messaggio:\n${data.messaggio}\n\n` +
+        `Cordiali saluti,\n${data.nome} ${data.cognome}\n\n` +
+        `---\n` +
+        `Questa email è stata generata dal form di contatto del sito Nova RE.`
+      );
+
+      // Crea il link mailto
+      const mailtoLink = `mailto:${contactEmail}?subject=${subject}&body=${body}`;
       
-      if (!response.ok) {
-        throw new Error(`Errore HTTP: ${response.status}`);
-      }
+      console.log('📧 Apertura client email con dati:', data);
       
-      return await response.json();
+      // Apre il client email dell'utente
+      window.location.href = mailtoLink;
+      
+      // Simula un delay per mostrare il messaggio di successo
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      return { success: true, message: 'Client email aperto con successo' };
+      
     } catch (error) {
-      console.error('Errore nell\'invio del form:', error);
-      throw error;
+      console.error('❌ Errore nell\'apertura del client email:', error);
+      throw new Error('❌ Impossibile aprire il client email. Contattaci direttamente al +39 328 593 8181');
     }
   };
 
@@ -126,7 +142,7 @@ const Contact = () => {
       // Successo
       setMessage({
         type: 'success',
-        text: '✅ Messaggio inviato con successo! Ti contatteremo presto.'
+        text: '✅ Email aperta nel tuo client di posta! Invia il messaggio per contattarci direttamente.'
       });
       
       // Reset form
