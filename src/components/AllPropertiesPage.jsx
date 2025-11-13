@@ -68,23 +68,6 @@ const AllPropertiesPage = () => {
     return Array.from(quartieri).filter(q => q && q.length > 0).sort();
   };
 
-  // Ottieni tipi unici dagli immobili disponibili
-  const getUniqueTypes = () => {
-    const types = new Set();
-    properties.forEach(property => {
-      if (property.propertyType) {
-        types.add(property.propertyType);
-      }
-      if (property.type) {
-        types.add(property.type);
-      }
-      if (property.category) {
-        types.add(property.category);
-      }
-    });
-    return Array.from(types).filter(t => t && t.length > 0).sort();
-  };
-
   // Ottieni classi energetiche realmente disponibili
   const getUniqueEnergyClasses = () => {
     const classes = new Set();
@@ -988,7 +971,7 @@ const AllPropertiesPage = () => {
                   fontSize: '0.85rem',
                   fontWeight: '500'
                 }}>
-                  🏠 {filters.tipo}
+                  🏠 {filters.tipo === 'affitto' ? 'Affitto' : filters.tipo === 'vendita' ? 'Vendita' : filters.tipo}
                 </span>
               )}
               {(filters.prezzoMin > 0 || filters.prezzoMax < 999999999) && (
