@@ -16,22 +16,24 @@ const AdminPanel = () => {
   const [refreshListings, setRefreshListings] = useState(0);
   const [editingListing, setEditingListing] = useState(null);
   const [showRegistration, setShowRegistration] = useState(false);
+  const [searchText, setSearchText] = useState(''); // Stato per la ricerca
 
   const handleLogin = async (username, password) => {
     try {
       console.log('🔐 DEBUG LOGIN - Credenziali inserite:');
       console.log('  Username:', username);
       console.log('  Password:', password);
-      
-      // Qui potresti fare una chiamata di test per verificare le credenziali
-      // Per ora assumiamo che il login sia sempre valido se username e password sono forniti
-      if (username && password) {
-        const newCredentials = { username, password };
+      // Ricevo anche companyCode dal form
+      const companyCode = arguments[2];
+      console.log('  Codice Azienda:', companyCode);
+      // Verifica che il codice azienda sia corretto
+      if (username && password && companyCode === 'NUOVARE-SECRET-2025') {
+        const newCredentials = { username, password, companyCode };
         console.log('🔐 DEBUG LOGIN - Salvando credenziali:', newCredentials);
         setCredentials(newCredentials);
         setIsAuthenticated(true);
       } else {
-        throw new Error('Credenziali non valide');
+        throw new Error('Credenziali o codice azienda non validi');
       }
     } catch (error) {
       alert('Errore nel login: ' + error.message);
@@ -309,6 +311,37 @@ const AdminPanel = () => {
       }}>
         {activeTab === 'view' && (
           <div>
+            {/* Barra di ricerca */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '8px', 
+                fontWeight: '600', 
+                color: '#333',
+                fontSize: '1.1rem'
+              }}>
+                🔍 Cerca tra i tuoi annunci
+              </label>
+              <input
+                type="text"
+                placeholder="Cerca per nome o indirizzo..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{
+                  width: '100%',
+                  maxWidth: '500px',
+                  padding: '12px 15px 12px 40px',
+                  border: '2px solid #e1e5e9',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' fill=\'%23666\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z\'/%3E%3C/svg%3E")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: '12px center',
+                  backgroundSize: '16px'
+                }}
+              />
+            </div>
+
             <div style={{ marginBottom: '20px', textAlign: 'center' }}>
               <button
                 onClick={() => setRefreshListings(prev => prev + 1)}
@@ -336,6 +369,11 @@ const AdminPanel = () => {
               adminPassword={credentials.password}
               onEdit={handleEditListing}
               onDelete={handleDeleteListing}
+              searchFilter={searchText}
+              onViewDetail={(listing) => {
+                setEditingListing(listing);
+                setActiveTab('edit');
+              }}
             />
           </div>
         )}

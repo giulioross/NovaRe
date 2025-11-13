@@ -3,8 +3,28 @@ import { useListings } from '../hooks/useListings';
 import LoadingSpinner from './LoadingSpinner';
 import { Link } from 'react-router-dom';
 
-const Listings = () => {
+const Listings = ({ 
+  adminMode = false, 
+  adminUsername = '', 
+  adminPassword = '', 
+  onEdit = null, 
+  onDelete = null, 
+  searchFilter = '' 
+}) => {
   const { listings, loading, error } = useListings();
+
+  // Filtro per la ricerca
+  const filteredListings = listings.filter(listing => {
+    if (!searchFilter || searchFilter.trim() === '') {
+      return true; // Mostra tutti se non c'è filtro
+    }
+    
+    const searchTerm = searchFilter.toLowerCase().trim();
+    const title = (listing.title || '').toLowerCase();
+    const address = (listing.address || '').toLowerCase();
+    
+    return title.includes(searchTerm) || address.includes(searchTerm);
+  });
 
   if (loading) {
     return (
@@ -61,7 +81,12 @@ const Listings = () => {
     );
   }
 
-  if (!listings || listings.length === 0) {
+  if (!filteredListings || filteredListings.length === 0) {
+    const hasSearchFilter = searchFilter && searchFilter.trim() !== '';
+    const message = hasSearchFilter 
+      ? `Nessun immobile trovato per "${searchFilter}"`
+      : 'Nessun immobile disponibile';
+    
     return (
       <div style={{ 
         minHeight: '100vh', 
@@ -78,12 +103,17 @@ const Listings = () => {
           backdropFilter: 'blur(10px)',
           padding: '40px'
         }}>
-          <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🏠</div>
+          <div style={{ fontSize: '4rem', marginBottom: '20px' }}>
+            {hasSearchFilter ? '🔍' : '🏠'}
+          </div>
           <h3 style={{ color: 'white', marginBottom: '15px', fontSize: '1.8rem' }}>
-            Nessun immobile disponibile
+            {message}
           </h3>
           <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '1.1rem' }}>
-            Non ci sono ancora immobili pubblicati. Torna presto per nuove opportunità!
+            {hasSearchFilter 
+              ? 'Prova con un termine di ricerca diverso o controlla l\'ortografia.'
+              : 'Non ci sono ancora immobili pubblicati. Torna presto per nuove opportunità!'
+            }
           </p>
         </div>
       </div>
@@ -110,7 +140,7 @@ const Listings = () => {
             fontSize: '2.5rem',
             fontWeight: '700'
           }}>
-            🏠 I nostri immobili ({listings.length})
+            🏠 I nostri immobili ({filteredListings.length})
           </h2>
       
       <div style={{
@@ -119,7 +149,7 @@ const Listings = () => {
         gap: '20px',
         marginTop: '20px'
       }}>
-        {listings.map((listing) => {
+        {filteredListings.map((listing) => {
           // Trova la prima immagine disponibile (stesso logic del ListingDetail)
           const getFirstImage = (listing) => {
             // Debug per vedere tutti i campi disponibili
@@ -232,9 +262,56 @@ const Listings = () => {
                 </span>
               </div>
               
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px', justifyContent: 'center' }}>
+                <button
+                  style={{
+                    background: listing.published ? '#ffc107' : '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    fontSize: '0.95rem',
+                    transition: 'background 0.2s ease'
+                  }}
+                  onClick={async () => {
+                    try {
+                      await import('../services/listingService.js').then(({ default: listingService }) =>
+                        listingService.patchListing(
+                          listing.id,
+                          { published: !listing.published },
+                          adminUsername,
+                          adminPassword
+                        )
+                      );
+                      window.location.reload();
+                    } catch (err) {
+                      alert('Errore nel cambio stato pubblicazione');
+                    }
+                  }}
+                >
+                  {listing.published ? 'Rendi Bozza' : 'Rendi Pubblico'}
+                </button>
+                <button
+                  style={{
+                    background: '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontWeight: '600',
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease'
+                  }}
+                  onClick={() => onEdit && onEdit(listing)}
+                >
+                  ✏️ Modifica
+                </button>
+              </div>
               <Link
-                to={`/listing/${listing.id}`}
-                state={{ from: '/' }}
+                to={adminMode && onViewDetail ? undefined : `/listing/${listing.id}`}
                 style={{
                   display: 'block',
                   textAlign: 'center',
@@ -246,10 +323,11 @@ const Listings = () => {
                   fontWeight: '600',
                   transition: 'background 0.3s ease'
                 }}
+                onClick={adminMode && onViewDetail ? (e) => { e.preventDefault(); onViewDetail(listing); } : undefined}
                 onMouseEnter={(e) => e.target.style.background = '#0056b3'}
                 onMouseLeave={(e) => e.target.style.background = '#007bff'}
               >
-                👀 Vedi Dettagli
+                👁️ Visualizza
               </Link>
             </div>
           </div>

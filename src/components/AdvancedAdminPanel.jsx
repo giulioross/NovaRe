@@ -21,6 +21,70 @@ const AdvancedAdminPanel = ({ onBack }) => {
   const [selectedListing, setSelectedListing] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [searchText, setSearchText] = useState(''); // Stato per la ricerca
+  const [publicationFilter, setPublicationFilter] = useState('all'); // 'all', 'published', 'draft'
+
+  // Filtro per la ricerca e stato pubblicazione negli immobili
+  const filteredListings = listings.filter(listing => {
+    // Filtro per stato di pubblicazione
+    if (publicationFilter === 'published' && listing.published !== true) {
+      return false;
+    }
+    if (publicationFilter === 'draft' && listing.published !== false) {
+      return false;
+    }
+    
+    // Filtro per ricerca testuale
+    if (!searchText || searchText.trim() === '') {
+      return true; // Mostra tutti se non c'è filtro di ricerca
+    }
+    
+    const searchTerm = searchText.toLowerCase().trim();
+    const title = (listing.title || '').toLowerCase();
+    const address = (listing.address || '').toLowerCase();
+    
+    return title.includes(searchTerm) || address.includes(searchTerm);
+  });
+
+  // Funzione per cambiare lo stato di pubblicazione (bozza <-> pubblico)
+  const togglePublishStatus = async (listingId, currentStatus) => {
+    try {
+      const newStatus = !currentStatus;
+      console.log(`🔄 Cambiando stato immobile ${listingId}: ${currentStatus ? 'PUBBLICO' : 'BOZZA'} → ${newStatus ? 'PUBBLICO' : 'BOZZA'}`);
+      const currentListing = listings.find(listing => listing.id === listingId);
+      if (!currentListing) {
+        throw new Error(`Immobile con ID ${listingId} non trovato`);
+      }
+      // Usa credenziali utente autenticato
+      const username = user?.username || 'admin';
+      const password = user?.password || 'ddd';
+      await listingService.patchListing(
+        listingId, 
+        { published: newStatus }, 
+        username, 
+        password,
+        { ...currentListing, published: newStatus } // fallback data per il caso PUT
+      );
+      setListings(prevListings => 
+        prevListings.map(listing => 
+          listing.id === listingId 
+            ? { ...listing, published: newStatus }
+            : listing
+        )
+      );
+      setMessage({
+        type: 'success',
+        text: `Immobile ${newStatus ? 'pubblicato' : 'reso bozza'} con successo`
+      });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: 'Errore durante il cambio di stato dell\'immobile'
+      });
+      setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+    }
+  };
 
   // Funzione per tornare alla home
   const handleGoHome = () => {
@@ -106,12 +170,15 @@ const AdvancedAdminPanel = ({ onBack }) => {
       console.log('- NUMERO TOTALE CAMPI:', Object.keys(payload).length);
       console.log('�📸 Immagini da caricare:', imageFiles.length);
 
+      // Usa credenziali utente autenticato
+      const username = user?.username || 'admin';
+      const password = user?.password || 'ddd';
       // Crea l'annuncio con il nuovo approccio separato (JSON + foto)
       const result = await listingService.createListingSeparated(
         payload,
         imageFiles,
-        'admin', // Usa admin che funziona con curl
-        'ddd'    // Password confermata funzionante
+        username,
+        password
       );
 
       console.log('✅ Annuncio creato:', result);
@@ -488,7 +555,7 @@ const AdvancedAdminPanel = ({ onBack }) => {
                 >
                   🏠 Torna alla Home
                 </button>
-                {hasPermission('create') && (
+                {isAuthenticated && (
                   <button
                     onClick={() => setCurrentView('create')}
                     style={{
@@ -521,6 +588,22 @@ const AdvancedAdminPanel = ({ onBack }) => {
               </div>
             </div>
             
+            {/* Messaggio di feedback */}
+            {message.text && (
+              <div style={{
+                background: message.type === 'success' ? '#d4edda' : '#f8d7da',
+                color: message.type === 'success' ? '#155724' : '#721c24',
+                border: `1px solid ${message.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                borderRadius: '8px',
+                padding: '15px',
+                marginBottom: '20px',
+                textAlign: 'center',
+                fontWeight: '600'
+              }}>
+                {message.text}
+              </div>
+            )}
+            
             {/* Lista immobili */}
             <div style={{
               background: 'white',
@@ -533,7 +616,120 @@ const AdvancedAdminPanel = ({ onBack }) => {
                 borderBottom: '1px solid #dee2e6',
                 background: '#f8f9fa'
               }}>
-                <h3 style={{ margin: 0 }}>📋 I Tuoi Annunci ({listings?.length || 0})</h3>
+                <h3 style={{ margin: '0 0 15px 0' }}>📋 I Tuoi Annunci ({filteredListings?.length || 0})</h3>
+                
+                {/* Barra di ricerca */}
+                <div style={{ marginTop: '15px' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '600', 
+                    color: '#333',
+                    fontSize: '0.9rem'
+                  }}>
+                    🔍 Cerca tra i tuoi annunci
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Cerca per nome o indirizzo..."
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    style={{
+                      width: '100%',
+                      maxWidth: '400px',
+                      padding: '10px 12px 10px 35px',
+                      border: '2px solid #e1e5e9',
+                      borderRadius: '8px',
+                      fontSize: '0.9rem',
+                      backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' fill=\'%23666\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z\'/%3E%3C/svg%3E")',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: '10px center',
+                      backgroundSize: '16px'
+                    }}
+                  />
+                  {searchText && (
+                    <small style={{ 
+                      display: 'block', 
+                      marginTop: '5px', 
+                      color: '#6c757d',
+                      fontSize: '0.8rem'
+                    }}>
+                      {filteredListings.length} di {listings.length} annunci
+                    </small>
+                  )}
+                </div>
+                
+                {/* Filtri per stato di pubblicazione */}
+                <div style={{ marginTop: '15px' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '600', 
+                    color: '#333',
+                    fontSize: '0.9rem'
+                  }}>
+                    📊 Filtra per stato
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => setPublicationFilter('all')}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        border: publicationFilter === 'all' ? '2px solid var(--color-primary)' : '2px solid #e1e5e9',
+                        background: publicationFilter === 'all' ? 'var(--color-primary)' : 'white',
+                        color: publicationFilter === 'all' ? 'white' : '#333',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      🏠 Tutti ({listings.length})
+                    </button>
+                    <button
+                      onClick={() => setPublicationFilter('published')}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        border: publicationFilter === 'published' ? '2px solid #28a745' : '2px solid #e1e5e9',
+                        background: publicationFilter === 'published' ? '#28a745' : 'white',
+                        color: publicationFilter === 'published' ? 'white' : '#333',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      ✅ Pubblici ({listings.filter(l => l.published === true).length})
+                    </button>
+                    <button
+                      onClick={() => setPublicationFilter('draft')}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        border: publicationFilter === 'draft' ? '2px solid #ffc107' : '2px solid #e1e5e9',
+                        background: publicationFilter === 'draft' ? '#ffc107' : 'white',
+                        color: publicationFilter === 'draft' ? '#333' : '#333',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      📝 Bozze ({listings.filter(l => l.published === false).length})
+                    </button>
+                  </div>
+                </div>
               </div>
               
               {listingsLoading ? (
@@ -544,12 +740,36 @@ const AdvancedAdminPanel = ({ onBack }) => {
                 <div style={{ padding: '40px', textAlign: 'center', color: '#dc3545' }}>
                   Errore nel caricamento: {listingsError}
                 </div>
-              ) : !listings || listings.length === 0 ? (
+              ) : !filteredListings || filteredListings.length === 0 ? (
                 <div style={{ padding: '40px', textAlign: 'center' }}>
-                  <h4>Nessun annuncio presente</h4>
-                  <p style={{ color: '#6c757d', marginBottom: '20px' }}>
-                    Inizia creando il tuo primo annuncio professionale
-                  </p>
+                  {searchText ? (
+                    <>
+                      <h4>🔍 Nessun risultato trovato</h4>
+                      <p style={{ color: '#6c757d', marginBottom: '20px' }}>
+                        Nessun annuncio corrisponde a "{searchText}"
+                      </p>
+                      <button
+                        onClick={() => setSearchText('')}
+                        style={{
+                          background: '#6c757d',
+                          color: 'white',
+                          border: 'none',
+                          padding: '10px 20px',
+                          borderRadius: '20px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Cancella ricerca
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <h4>Nessun annuncio presente</h4>
+                      <p style={{ color: '#6c757d', marginBottom: '20px' }}>
+                        Inizia creando il tuo primo annuncio professionale
+                      </p>
+                    </>
+                  )}
                   {hasPermission('create') && (
                     <button
                       onClick={() => setCurrentView('create')}
@@ -570,7 +790,7 @@ const AdvancedAdminPanel = ({ onBack }) => {
                 </div>
               ) : (
                 <div>
-                  {listings.map((listing, index) => (
+                  {filteredListings.map((listing, index) => (
                     <div key={listing.id} style={{
                       padding: '20px',
                       borderBottom: index < listings.length - 1 ? '1px solid #dee2e6' : 'none',
@@ -582,7 +802,7 @@ const AdvancedAdminPanel = ({ onBack }) => {
                         <h4 style={{ margin: '0 0 5px 0', color: 'var(--color-primary)' }}>
                           {listing.title || listing.titolo || `Immobile ${listing.id}`}
                         </h4>
-                        <p style={{ margin: '0 0 5px 0', color: '#666' }}>
+                        <p style={{ margin: 0, color: '#666' }}>
                           📍 {listing.address || listing.indirizzo || 'Indirizzo non specificato'} - {listing.city || listing.citta || 'Città'}
                         </p>
                         <div style={{ display: 'flex', gap: '15px', fontSize: '0.9rem', color: '#666' }}>
@@ -678,48 +898,44 @@ const AdvancedAdminPanel = ({ onBack }) => {
                         >
                           👁️ Visualizza
                         </button>
-                        
-                        {hasPermission('edit') && (
-                          <button
-                            onClick={() => {
-                              setSelectedListing(listing);
-                              setCurrentView('edit');
-                            }}
-                            style={{
-                              background: 'var(--color-secondary)',
-                              color: 'white',
-                              border: 'none',
-                              padding: '8px 16px',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            ✏️ Modifica
-                          </button>
+                        {isAuthenticated && (
+                          <>
+                            <button
+                              onClick={() => {
+                                setSelectedListing(listing);
+                                setCurrentView('edit');
+                              }}
+                              style={{
+                                background: 'var(--color-secondary)',
+                                color: 'white',
+                                border: 'none',
+                                padding: '8px 16px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                marginRight: '8px'
+                              }}
+                            >
+                              ✏️ Modifica
+                            </button>
+                            <button
+                              onClick={() => togglePublishStatus(listing.id, listing.published)}
+                              style={{
+                                background: listing.published ? '#28a745' : '#ffc107',
+                                color: listing.published ? 'white' : '#212529',
+                                border: 'none',
+                                padding: '8px 16px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                marginRight: '8px'
+                              }}
+                              title={`Clicca per ${listing.published ? 'rendere bozza' : 'pubblicare'}`}
+                            >
+                              {listing.published ? '👁️ Pubblico' : '👁️‍🗨️ Bozza'}
+                            </button>
+                          </>
                         )}
-                        
-                        {hasPermission('publish') && (
-                          <button
-                            onClick={() => handleTogglePublish(
-                              listing.id, 
-                              listing.published, 
-                              listing.title || listing.titolo
-                            )}
-                            style={{
-                              background: listing.published ? '#28a745' : '#ffc107',
-                              color: listing.published ? 'white' : '#212529',
-                              border: 'none',
-                              padding: '8px 16px',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            {listing.published ? '👁️ Pubblico' : '👁️‍🗨️ Bozza'}
-                          </button>
-                        )}
-                        
                         <button
                           onClick={() => handleDeleteListing(
                             listing.id, 

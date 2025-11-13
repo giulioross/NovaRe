@@ -20,14 +20,19 @@ export const useListings = () => {
     setError(null);
     
     try {
-      // DEBUG: Carica TUTTI gli immobili (pubblici e privati) per il debug
-      const isDebugMode = true; // Cambia a false per tornare ai soli pubblici
+      // Usa API admin con credenziali corrette per mostrare TUTTI gli immobili (pubblici + bozze)
+      console.log('🔍 Carico TUTTI gli immobili (pubblici + bozze)...');
+      const data = await listingService.getAllListingsAdmin('admin', 'ddd');
+      console.log('📥 Immobili totali caricati:', data?.length || 0);
       
-      const data = isDebugMode ? 
-        await listingService.getAllListingsAdmin() : 
-        await listingService.getPublicListings();
-        
-      console.log('📥 useListings - Dati ricevuti dal backend (modalità debug):', data);
+      // Log dettagliato dello stato degli immobili
+      if (data && data.length > 0) {
+        console.log('📊 Stato immobili:');
+        data.forEach((item, index) => {
+          console.log(`  ${index + 1}. ${item.title} - Status: ${item.published ? 'Pubblico' : 'Bozza'}`);
+        });
+      }
+      console.log('📥 useListings - Dati da visualizzare:', data);
       
       if (data && Array.isArray(data)) {
         console.log(`✅ useListings - Caricati ${data.length} immobili pubblici`);

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { COMPANY_CODE, saveCredentials } from '../utils/authUtils.js';
 import authService from '../services/authService.js';
+import { useNavigate } from 'react-router-dom';
 
 const AdminRegistration = ({ onRegistrationSuccess, onCancel }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -64,6 +66,8 @@ const AdminRegistration = ({ onRegistrationSuccess, onCancel }) => {
             password: formData.password
           });
         }
+        // Naviga subito al login admin
+        navigate('/admin');
       }, 2000);
 
     } catch (error) {

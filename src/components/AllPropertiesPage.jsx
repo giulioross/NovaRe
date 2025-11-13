@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import LoadingSpinner from './LoadingSpinner';
 import { useListings } from '../hooks/useListings';
 import PlaceholderImage from './PlaceholderImage';
-import { API_BASE } from '../services/listingService.js';
+import { API_BASE, listingService } from '../services/listingService.js';
 
 const AllPropertiesPage = () => {
   const { listings: properties, loading, error, refetch } = useListings();
@@ -13,14 +13,47 @@ const AllPropertiesPage = () => {
   useEffect(() => {
     console.log('🏠 AllPropertiesPage - Immobili caricati:', properties.length);
     console.log('🏠 Lista completa immobili:', properties);
+    
+    // Log dello stato di pubblicazione per capire perché alcuni sono diventati bozze
     if (properties.length > 0) {
-      console.log('🏠 STRUTTURA PRIMO IMMOBILE:', properties[0]);
-      console.log('🏠 Campi disponibili:', Object.keys(properties[0]));
+      console.log('📊 STATO PUBBLICAZIONE IMMOBILI:');
+      properties.forEach((prop, index) => {
+        console.log(`  ${index + 1}. "${prop.title}" - Published: ${prop.published} (${prop.published ? 'PUBBLICO' : 'BOZZA'})`);
+      });
     }
   }, [properties]);
+
+  // Funzione per cambiare lo stato di pubblicazione (bozza <-> pubblico)
+  const togglePublishStatus = async (propertyId, currentStatus) => {
+    try {
+      const newStatus = !currentStatus;
+      console.log(`🔄 Cambiando stato immobile ${propertyId}: ${currentStatus ? 'PUBBLICO' : 'BOZZA'} → ${newStatus ? 'PUBBLICO' : 'BOZZA'}`);
+      
+      // Trova l'immobile per fallback
+      const currentProperty = properties.find(prop => prop.id === propertyId);
+      
+      await listingService.patchListing(
+        propertyId, 
+        { published: newStatus }, 
+        'admin', 
+        'ddd',
+        currentProperty ? { ...currentProperty, published: newStatus } : null
+      );
+      
+      console.log('✅ Stato cambiato con successo');
+      
+      // Ricarica la lista per vedere i cambiamenti
+      refetch();
+      
+    } catch (error) {
+      console.error('❌ Errore nel cambiare stato:', error);
+      alert('Errore durante il cambio di stato dell\'immobile');
+    }
+  };
   
   // Filtri state
   const [filters, setFilters] = useState({
+    searchText: '', // Nuovo filtro per la ricerca testuale
     quartiere: 'all',
     tipo: 'all',
     prezzoMin: 0,
@@ -92,6 +125,31 @@ const AllPropertiesPage = () => {
     console.log('🔍 Titolo:', property.title || 'Senza titolo');
     console.log('🔍 ID:', property.id);
     console.log('🔍 Filtri attivi:', filters);
+    
+    // FILTRO PUBBLICAZIONE: Solo immobili pubblicati nella sezione pubblica
+    if (property.published !== true) {
+      console.log('🚫 Escluso perché è una bozza (published: false)');
+      return false;
+    }
+    
+    // Filtro ricerca testuale (nome/titolo immobile)
+    if (filters.searchText && filters.searchText.trim() !== '') {
+      const searchTerm = filters.searchText.toLowerCase().trim();
+      const title = (property.title || '').toLowerCase();
+      const address = (property.address || '').toLowerCase();
+      
+      const matchesTitle = title.includes(searchTerm);
+      const matchesAddress = address.includes(searchTerm);
+      
+      console.log('🔍 Ricerca testuale:', searchTerm);
+      console.log('🔍 Nel titolo:', matchesTitle, `"${title}"`);
+      console.log('🔍 Nell\'indirizzo:', matchesAddress, `"${address}"`);
+      
+      if (!matchesTitle && !matchesAddress) {
+        console.log('🚫 Escluso dalla ricerca testuale');
+        return false;
+      }
+    }
     
     // Filtro quartiere
     if (filters.quartiere !== 'all' && filters.quartiere.trim() !== '') {
@@ -328,6 +386,7 @@ const AllPropertiesPage = () => {
   // Funzione per resettare tutti i filtri
   const handleResetFilters = () => {
     setFilters({
+      searchText: '', // Reset anche la ricerca testuale
       tipo: 'all',
       quartiere: 'all',
       prezzoMin: 0,
@@ -354,6 +413,7 @@ const AllPropertiesPage = () => {
   // Componente per singola proprietà
   const PropertyCard = ({ property, navigate }) => {
     const mainPhoto = property.photoUrls && property.photoUrls.length > 0 ? property.photoUrls[0] : null;
+    const isPublished = property.published;
     
     return (
       <div 
@@ -363,7 +423,8 @@ const AllPropertiesPage = () => {
           overflow: 'hidden',
           boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
           transition: 'all 0.3s ease',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          opacity: isPublished ? 1 : 0.85
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-5px)';
@@ -398,6 +459,7 @@ const AllPropertiesPage = () => {
             }} 
           />
           
+          {/* Badge contratto */}
           <div 
             style={{
               position: 'absolute',
@@ -409,10 +471,48 @@ const AllPropertiesPage = () => {
               borderRadius: '20px',
               fontSize: '0.8rem',
               fontWeight: '600',
-              textTransform: 'uppercase'
+              textTransform: 'uppercase',
+              zIndex: 999
             }}
           >
             {property.contractType || 'N/A'}
+          </div>
+
+          {/* Badge stato pubblicazione cliccabile */}
+          <div 
+            onClick={(e) => {
+              e.stopPropagation();
+              togglePublishStatus(property.id, isPublished);
+            }}
+            style={{
+              position: 'absolute',
+              top: '15px',
+              left: '15px',
+              background: isPublished ? '#4caf50' : '#ff9800',
+              color: 'white',
+              padding: '8px 12px',
+              borderRadius: '20px',
+              fontSize: '0.75rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              zIndex: 1000
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'scale(1.05)';
+              e.target.style.background = isPublished ? '#45a049' : '#f57c00';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'scale(1)';
+              e.target.style.background = isPublished ? '#4caf50' : '#ff9800';
+            }}
+            title={`Clicca per ${isPublished ? 'nascondere' : 'pubblicare'} questo immobile`}
+          >
+            <span>{isPublished ? '👁️' : '👁️‍🗨️'}</span>
+            <span>{isPublished ? 'PUBBLICO' : 'BOZZA'}</span>
           </div>
         </div>
         
@@ -569,6 +669,30 @@ const AllPropertiesPage = () => {
             gap: '20px',
             marginBottom: '20px'
           }}>
+            {/* Barra di ricerca per nome immobile */}
+            <div style={{ position: 'relative', zIndex: 5 }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#333' }}>
+                🔍 Cerca immobile
+              </label>
+              <input
+                type="text"
+                placeholder="Cerca per nome o indirizzo..."
+                value={filters.searchText}
+                onChange={(e) => setFilters({...filters, searchText: e.target.value})}
+                style={{
+                  width: '100%',
+                  padding: '12px 15px 12px 40px',
+                  border: '2px solid #e1e5e9',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' fill=\'%23666\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z\'/%3E%3C/svg%3E")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: '12px center',
+                  backgroundSize: '16px'
+                }}
+              />
+            </div>
+
             <div style={{ position: 'relative', zIndex: 5 }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#333' }}>
                 Quartiere

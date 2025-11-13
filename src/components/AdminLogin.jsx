@@ -9,7 +9,8 @@ const AdminLogin = ({ onLogin }) => {
   const navigate = useNavigate();
   const [credentials, setCredentials] = useState({
     username: '',
-    password: ''
+    password: '',
+    companyCode: ''
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,8 +25,8 @@ const AdminLogin = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!credentials.username || !credentials.password) {
-      alert('Per favore inserisci username e password');
+    if (!credentials.username || !credentials.password || !credentials.companyCode) {
+      alert('Per favore inserisci username, password e codice azienda');
       return;
     }
 
@@ -65,12 +66,11 @@ const AdminLogin = ({ onLogin }) => {
           fontSize: '1.5rem',
           fontWeight: '600'
         }}>
-          Login Amministratore
+          🏢 NovaRe Admin
         </h2>
         <p style={{ color: '#666', fontSize: '0.9rem' }}>
-          Inserisci le tue credenziali per accedere al pannello di controllo
+          Accedi al pannello di amministrazione
         </p>
-        
         {/* Bottone Torna alla Home */}
         <button
           type="button"
@@ -98,6 +98,28 @@ const AdminLogin = ({ onLogin }) => {
         >
           ← Torna alla Home
         </button>
+        {/* Banner registrazione */}
+        <div style={{ marginTop: '18px', textAlign: 'center' }}>
+          <span style={{ color: '#333', fontSize: '0.95rem' }}>Non hai un account?</span>
+          <button
+            type="button"
+            style={{
+              marginLeft: '10px',
+              background: 'var(--color-primary)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '20px',
+              padding: '7px 18px',
+              fontWeight: '600',
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+            }}
+            onClick={() => navigate('/admin/register')}
+          >
+            Registrati
+          </button>
+        </div>
       </div>
 
       {/* Form di login */}
@@ -144,7 +166,7 @@ const AdminLogin = ({ onLogin }) => {
         </div>
 
         {/* Password */}
-        <div style={{ marginBottom: '30px' }}>
+        <div style={{ marginBottom: '20px' }}>
           <label 
             htmlFor="password"
             style={{
@@ -163,6 +185,47 @@ const AdminLogin = ({ onLogin }) => {
             value={credentials.password}
             onChange={handleInputChange}
             placeholder="Inserisci la tua password"
+            required
+            disabled={isLoading}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              border: '2px solid #e1e5e9',
+              borderRadius: '10px',
+              fontSize: '14px',
+              transition: 'border-color 0.3s',
+              outline: 'none',
+              backgroundColor: isLoading ? '#f8f9fa' : 'white'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#007bff';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#e1e5e9';
+            }}
+          />
+        </div>
+
+        {/* Codice Azienda */}
+        <div style={{ marginBottom: '30px' }}>
+          <label 
+            htmlFor="companyCode"
+            style={{
+              display: 'block',
+              marginBottom: '8px',
+              fontWeight: '500',
+              color: '#333'
+            }}
+          >
+            Codice Azienda
+          </label>
+          <input
+            type="text"
+            id="companyCode"
+            name="companyCode"
+            value={credentials.companyCode}
+            onChange={handleInputChange}
+            placeholder="Inserisci il codice azienda"
             required
             disabled={isLoading}
             style={{

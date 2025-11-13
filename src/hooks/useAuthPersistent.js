@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import authService from '../services/authService'; // Assicurati che il percorso sia corretto
 
 const AUTH_KEY = 'novaRe_unified_auth';
 const AUTH_EXPIRY_HOURS = 24; // 24 ore di sessione
@@ -87,8 +88,8 @@ export const useAuthPersistent = () => {
   const login = useCallback(async (username, password, companyCode) => {
     try {
       console.log('🔐 Tentativo login:', { username });
-      
-      // Verifica credenziali admin
+
+      // Verifica credenziali admin predefinite
       if (username === 'admin' && password === 'ddd' && 
           (companyCode === 'NOVARE2025' || companyCode === 'NUOVARE-SECRET-2025')) {
         
@@ -119,13 +120,24 @@ export const useAuthPersistent = () => {
         return { success: true, user: userData };
       }
 
-      // Qui potresti aggiungere altre verifiche per utenti registrati
-      // const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      // ... verifica user registrati
+      // Verifica credenziali admin tramite API
+      const isValid = await authService.testAdminCredentials(username, password);
+      if (isValid) {
+        const userData = {
+          username,
+          companyCode,
+          role: 'admin',
+          loginTime: new Date().toISOString()
+        };
+        saveAuthData(userData);
+        setUser(userData);
+        setIsAuthenticated(true);
+        console.log('✅ Login admin API riuscito');
+        return { success: true, user: userData };
+      }
 
       console.log('❌ Credenziali non valide');
       return { success: false, error: 'Credenziali non valide' };
-      
     } catch (error) {
       console.error('❌ Errore durante login:', error);
       return { success: false, error: 'Errore durante l\'autenticazione' };

@@ -47,9 +47,9 @@ export const createAdminAuthHeader = () => {
 export const saveCredentials = (username, password) => {
   if (typeof window !== 'undefined') {
     localStorage.setItem('admin_username', username);
-    // Nota: In produzione, NON salvare la password in plain text
-    // Considera l'uso di token JWT o session-based auth
     localStorage.setItem('admin_password', password);
+    // Salva anche companyUserInfo per compatibilità con useAuthPersistent
+    localStorage.setItem('companyUserInfo', JSON.stringify({ username, password }));
   }
 };
 
@@ -59,9 +59,19 @@ export const saveCredentials = (username, password) => {
  */
 export const getSavedCredentials = () => {
   if (typeof window !== 'undefined') {
+    // Prova a recuperare da companyUserInfo (preferito)
+    const userInfo = localStorage.getItem('companyUserInfo');
+    if (userInfo) {
+      try {
+        const parsed = JSON.parse(userInfo);
+        if (parsed.username && parsed.password) {
+          return { username: parsed.username, password: parsed.password };
+        }
+      } catch (e) {}
+    }
+    // Fallback su admin_username/admin_password
     const username = localStorage.getItem('admin_username');
     const password = localStorage.getItem('admin_password');
-    
     if (username && password) {
       return { username, password };
     }
@@ -76,6 +86,7 @@ export const clearCredentials = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('admin_username');
     localStorage.removeItem('admin_password');
+    localStorage.removeItem('companyUserInfo');
   }
 };
 

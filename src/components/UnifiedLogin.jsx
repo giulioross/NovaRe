@@ -198,24 +198,27 @@ const UnifiedLogin = () => {
             {loading ? '🔄 Accesso in corso...' : '🔑 Accedi'}
           </button>
         </form>
-
-        <div style={{
-          textAlign: 'center',
-          marginTop: '1.5rem',
-          padding: '1rem',
-          background: '#f8f9fa',
-          borderRadius: '8px'
-        }}>
-          <p style={{ 
-            margin: 0, 
-            fontSize: '0.85rem', 
-            color: '#666'
-          }}>
-            💡 <strong>Credenziali demo:</strong><br />
-            Username: admin<br />
-            Password: ddd<br />
-            Codice: NOVARE2025
-          </p>
+        {/* Banner registrazione */}
+        <div style={{ marginTop: '18px', textAlign: 'center' }}>
+          <span style={{ color: '#333', fontSize: '0.95rem' }}>Non hai un account?</span>
+          <button
+            type="button"
+            style={{
+              marginLeft: '10px',
+              background: 'var(--color-primary)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '20px',
+              padding: '7px 18px',
+              fontWeight: '600',
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+            }}
+            onClick={() => navigate('/admin/register')}
+          >
+            Registrati
+          </button>
         </div>
       </div>
     </div>

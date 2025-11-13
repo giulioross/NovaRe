@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import './AboutPage.css';
@@ -8,6 +8,11 @@ const AboutPage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentPartnerSlide, setCurrentPartnerSlide] = useState(0);
   const [currentOfficeImageSlide, setCurrentOfficeImageSlide] = useState(0);
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   const teamMembers = [
     {
